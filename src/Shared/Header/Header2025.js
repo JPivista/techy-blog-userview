@@ -93,7 +93,7 @@ const Header = () => {
                             );
                         })}
                         <Link
-                            href="/contact"
+                            href="/contact-us"
                             onClick={() => setIsOpen(false)}
                             className={`mt-2 ${pathname === "/contact"
                                 ? "text-purple-600 font-semibold underline"
