@@ -9,7 +9,7 @@ const LatestBlogs = () => {
     useEffect(() => {
         const fetchBlogs = async () => {
             try {
-                const response = await fetch('http://localhost:7010/api/blogs');
+                const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/blogs`);
                 if (!response.ok) throw new Error('Failed to fetch blogs');
 
                 const data = await response.json();
