@@ -8,7 +8,7 @@ const WhyTechyBlog = () => {
                     Why techyblog?
                 </h2>
                 <p className="text-gray-600 max-w-2xl mx-auto text-lg mb-12">
-                    We're not just another blog—we're a growing community of curious minds driven by discovery, storytelling, and meaningful insights.
+                    We&apos;re not just another blog—we&apos;re a growing community of curious minds driven by discovery, storytelling, and meaningful insights.
                 </p>
 
                 <div className="grid md:grid-cols-3 gap-10 mt-8">
@@ -26,7 +26,7 @@ const WhyTechyBlog = () => {
                         <FaUsers className="text-4xl mb-4 text-pink-500 mx-auto" />
                         <h3 className="text-xl font-semibold mb-2">Built for Readers</h3>
                         <p className="text-gray-500 text-sm">
-                            Whether you're a student, pro, or enthusiast—our content is tailored for clarity, creativity, and value.
+                            Whether you&apos;re a student, pro, or enthusiast—our content is tailored for clarity, creativity, and value.
                         </p>
                     </div>
 
