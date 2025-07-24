@@ -24,7 +24,7 @@ const ContactForm = () => {
 
                 {submitted ? (
                     <p className="text-center text-xl font-semibold text-green-200">
-                        Thank you for reaching out! We'll get back to you soon.
+                        Thank you for reaching out! We&apos;ll get back to you soon.
                     </p>
                 ) : (
                     <form onSubmit={handleSubmit} className="space-y-6">
