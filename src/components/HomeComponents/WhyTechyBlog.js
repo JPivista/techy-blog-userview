@@ -2,7 +2,7 @@ import { FaLightbulb, FaUsers, FaRocket } from "react-icons/fa";
 
 const WhyTechyBlog = () => {
     return (
-        <section className="w-full bg-white py-20 px-6">
+        <section className="w-full bg-white py-10 px-6">
             <div className="max-w-7xl mx-auto text-center">
                 <h2 className="text-4xl font-extrabold mb-4 bg-gradient-to-r from-purple-600 via-pink-500 to-yellow-400 bg-clip-text text-transparent">
                     Why techyblog?

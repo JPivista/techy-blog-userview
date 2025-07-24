@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Menu, X } from "lucide-react"; // you can also use heroicons or react-icons
+import { usePathname } from "next/navigation";
+import { Menu, X } from "lucide-react"; // Optional: can use heroicons/react-icons too
 
 const categories = [
     "Science", "Technology", "Business", "Cinema", "Sports", "Gaming",
@@ -12,6 +13,7 @@ const categories = [
 
 const Header = () => {
     const [isOpen, setIsOpen] = useState(false);
+    const pathname = usePathname();
 
     const toggleMenu = () => {
         setIsOpen(!isOpen);
@@ -21,22 +23,39 @@ const Header = () => {
         <header className="w-full bg-white shadow sticky top-0 z-50">
             <div className="max-w-7xl mx-auto flex items-center justify-between px-4 py-4">
                 {/* Logo */}
-                <Link href="/" className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-pink-500 to-yellow-400">
+                <Link
+                    href="/"
+                    className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-pink-500 to-yellow-400"
+                >
                     techyblog
                 </Link>
 
-                {/* Desktop Nav */}
+                {/* Desktop Navigation */}
                 <nav className="hidden md:flex flex-wrap gap-4 text-sm font-medium">
-                    {categories.slice(0, 6).map((cat) => (
-                        <Link
-                            key={cat}
-                            href={`/${cat.toLowerCase().replace(/\s+/g, "-")}`}
-                            className="text-gray-700 hover:text-purple-600 transition"
-                        >
-                            {cat}
-                        </Link>
-                    ))}
-                    <Link href="/contact" className="text-purple-600 font-semibold hover:underline ml-2">
+                    {categories.slice(0, 6).map((cat) => {
+                        const slug = `/${cat.toLowerCase().replace(/\s+/g, "-")}`;
+                        const isActive = pathname === slug;
+
+                        return (
+                            <Link
+                                key={cat}
+                                href={slug}
+                                className={`${isActive
+                                    ? "text-purple-600 font-semibold border-b-2 border-purple-600"
+                                    : "text-gray-700"
+                                    } hover:text-purple-600 transition pb-1`}
+                            >
+                                {cat}
+                            </Link>
+                        );
+                    })}
+                    <Link
+                        href="/contact"
+                        className={`ml-2 ${pathname === "/contact"
+                            ? "text-purple-600 font-semibold underline"
+                            : "text-purple-600"
+                            } hover:underline`}
+                    >
                         Contact Us
                     </Link>
                 </nav>
@@ -51,24 +70,35 @@ const Header = () => {
                 </button>
             </div>
 
-            {/* Mobile Menu */}
+            {/* Mobile Navigation */}
             {isOpen && (
                 <div className="md:hidden px-4 pb-4">
                     <nav className="flex flex-col gap-2 text-sm font-medium border-t border-gray-200 pt-4">
-                        {categories.map((cat) => (
-                            <Link
-                                key={cat}
-                                href={`/category/${cat.toLowerCase().replace(/\s+/g, "-")}`}
-                                className="text-gray-700 hover:text-purple-600 transition"
-                                onClick={() => setIsOpen(false)}
-                            >
-                                {cat}
-                            </Link>
-                        ))}
+                        {categories.map((cat) => {
+                            const slug = `/category/${cat.toLowerCase().replace(/\s+/g, "-")}`;
+                            const isActive = pathname === slug;
+
+                            return (
+                                <Link
+                                    key={cat}
+                                    href={slug}
+                                    onClick={() => setIsOpen(false)}
+                                    className={`${isActive
+                                        ? "text-purple-600 font-semibold"
+                                        : "text-gray-700"
+                                        } hover:text-purple-600 transition`}
+                                >
+                                    {cat}
+                                </Link>
+                            );
+                        })}
                         <Link
                             href="/contact"
-                            className="text-purple-600 font-semibold hover:underline mt-2"
                             onClick={() => setIsOpen(false)}
+                            className={`mt-2 ${pathname === "/contact"
+                                ? "text-purple-600 font-semibold underline"
+                                : "text-purple-600"
+                                } hover:underline`}
                         >
                             Contact Us
                         </Link>

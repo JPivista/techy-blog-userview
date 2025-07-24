@@ -2,6 +2,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Header from "../Shared/Header/index";
 import Footer from "../Shared/Footer/index";
+import ScrollToTop from "..//Shared/ScrollToTop";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,6 +26,7 @@ export default function RootLayout({ children }) {
       // className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Header />
+        <ScrollToTop />
         {children}
         <Footer />
       </body>

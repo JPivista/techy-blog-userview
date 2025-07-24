@@ -1,5 +1,11 @@
 'use client'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Navigation, Pagination, Autoplay } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
+import Link from 'next/link';
 
 const LatestBlogs = () => {
     const [blogs, setBlogs] = useState([]);
@@ -13,7 +19,8 @@ const LatestBlogs = () => {
                 if (!response.ok) throw new Error('Failed to fetch blogs');
 
                 const data = await response.json();
-                setBlogs(data.blogs || []);
+                const publishedBlogs = data.blogs?.filter(blog => blog.status === "published").slice(0, 10) || [];
+                setBlogs(publishedBlogs);
             } catch (err) {
                 setError(err.message);
             } finally {
@@ -28,28 +35,69 @@ const LatestBlogs = () => {
     if (error) return <div className="text-center text-red-500 mt-10">Error: {error}</div>;
 
     return (
-        <div className="max-w-6xl mx-auto px-4 py-10">
-            <h2 className="text-3xl font-bold mb-8 text-center text-gray-800">Latest Blog Posts</h2>
+        <div className="max-w-7xl mx-auto px-4 py-10">
+            <h2 className="text-4xl font-extrabold text-center bg-gradient-to-r from-purple-600 via-pink-500 to-yellow-400 bg-clip-text text-transparent mb-12">
+                Latest Blog Posts
+            </h2>
 
             {blogs.length === 0 ? (
-                <p className="text-center text-gray-500">No blogs available.</p>
+                <p className="text-center text-gray-500">No published blogs available.</p>
             ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+                <Swiper
+                    spaceBetween={30}
+                    slidesPerView={1}
+                    loop={true}
+                    navigation={true}
+                    pagination={{ clickable: true }}
+                    autoplay={{ delay: 3000 }}
+                    breakpoints={{
+                        640: { slidesPerView: 1 },
+                        768: { slidesPerView: 2 },
+                        1024: { slidesPerView: 3 },
+                    }}
+                    modules={[Navigation, Pagination, Autoplay]}
+                >
                     {blogs.map((blog) => (
-                        <div key={blog._id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-xl transition">
-                            <h3 className="text-xl font-semibold mb-2 text-blue-600">{blog.title}</h3>
-                            <p className="text-gray-600 mb-4 line-clamp-3">{blog.description}</p>
-                            <p className="text-sm text-gray-400">
-                                {blog.publishedDate
-                                    ? new Date(blog.publishedDate).toLocaleDateString()
-                                    : 'No Date'}
-                            </p>
-                            <p className="text-sm text-gray-500 mt-2">
-                                By: {blog?.createdBy?.name || 'Unknown'}
-                            </p>
-                        </div>
+                        <SwiperSlide key={blog._id} className='p-3'>
+                            <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition h-full flex flex-col justify-between">
+                                {/* Image or fallback */}
+                                {blog.image ? (
+                                    <img
+                                        src={blog.image}
+                                        alt={blog.title}
+                                        className="w-full h-48 object-cover"
+                                    />
+                                ) : (
+                                    <div className="w-full h-48 flex items-center justify-center text-3xl font-bold text-white bg-gradient-to-r from-purple-600 via-pink-500 to-yellow-400 shadow-lg animate-pulse">
+                                        <span className="drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]">techyblog</span>
+                                    </div>
+                                )}
+
+                                {/* Content */}
+                                <div className="p-4 flex flex-col justify-between flex-grow">
+                                    <h3 className="text-lg font-semibold text-blue-700 mb-2 line-clamp-2">
+                                        {blog.title}
+                                    </h3>
+                                    <div
+                                        className="text-gray-600 text-sm line-clamp-3"
+                                        dangerouslySetInnerHTML={{ __html: blog.description }}
+                                    />
+                                    <div className="text-sm text-gray-400 mt-2 flex justify-between">
+                                        <span>{blog?.publishedDate ? new Date(blog.publishedDate).toLocaleDateString() : 'No Date'}</span>
+                                        <span>By: {blog?.createdBy?.name || 'Unknown'}</span>
+                                    </div>
+                                    <Link
+                                        href={`/${blog.subcategories[0]?.name.toLowerCase()}/${blog.slug}`}
+                                        className="mt-4 text-sm font-semibold text-purple-600 hover:text-purple-800 transition"
+                                    >
+                                        Read More →
+                                    </Link>
+
+                                </div>
+                            </div>
+                        </SwiperSlide>
                     ))}
-                </div>
+                </Swiper>
             )}
         </div>
     );

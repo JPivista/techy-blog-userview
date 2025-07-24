@@ -12,6 +12,7 @@ import {
     FaGlobe,
     FaMicroscope
 } from "react-icons/fa";
+import WhatWeDo from "./WhatWeDo";
 
 
 export default function Home({ blogs }) {
@@ -26,9 +27,10 @@ export default function Home({ blogs }) {
     return (
         <>
             <HeroSection />
-            <BrowseByCategory categories={categories} />
-            <WhyTechyBlog />
             <LatestBlogs />
+            <WhyTechyBlog />
+            <WhatWeDo />
+            <BrowseByCategory categories={categories} />
         </>
     );
 }
