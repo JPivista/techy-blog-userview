@@ -75,7 +75,7 @@ const LetsWorkTogether = () => {
                     Let’s Work Together
                 </h2>
                 <p className="text-gray-300 mb-10 text-lg">
-                    Tell us more about your company and needs. We'll reach out with tailored solutions.
+                    Tell us more about your company and needs. We&apos;ll reach out with tailored solutions.
                 </p>
 
                 <form onSubmit={handleSubmit} className="bg-[#14202E] rounded-xl p-8 shadow-2xl text-left space-y-6">
