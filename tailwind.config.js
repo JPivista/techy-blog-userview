@@ -18,5 +18,8 @@ module.exports = {
     './components/**/*.{js,ts,jsx,tsx}',
     './pages/**/*.{js,ts,jsx,tsx}',
   ],
-  plugins: [],
+  plugins: [
+    require('@tailwindcss/line-clamp'),
+
+  ],
 }

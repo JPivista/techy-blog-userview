@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,17 +9,33 @@ async function getBlogs() {
         cache: 'no-store',
     });
 
-    if (!res.ok) {
-        throw new Error('Failed to fetch blogs');
-    }
+    if (!res.ok) throw new Error('Failed to fetch blogs');
 
     const data = await res.json();
     return data.blogs || [];
 }
 
+// ✅ Validate if category exists in blog subcategories
+async function isValidCategory(category) {
+    const blogs = await getBlogs();
+
+    const valid = blogs.some((blog) =>
+        blog.subcategories?.some(
+            (sub) => sub.name.toLowerCase() === category.toLowerCase()
+        )
+    );
+
+    return valid;
+}
+
 const CategoryPage = async ({ params }) => {
     const { category } = params;
+
     const blogs = await getBlogs();
+
+    // ❌ If category not valid, return 404
+    const isValid = await isValidCategory(category);
+    if (!isValid) return notFound();
 
     const filteredBlogs = blogs.filter((blog) =>
         blog.subcategories?.some(
@@ -41,7 +58,6 @@ const CategoryPage = async ({ params }) => {
                             key={blog._id}
                             className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition flex flex-col"
                         >
-                            {/* Image or fallback */}
                             {blog.image ? (
                                 <img
                                     src={blog.image}
@@ -54,7 +70,6 @@ const CategoryPage = async ({ params }) => {
                                 </div>
                             )}
 
-                            {/* Blog content */}
                             <div className="p-4 flex flex-col flex-grow">
                                 <h3 className="text-lg font-semibold text-blue-700 mb-2 line-clamp-2">
                                     {blog.title}
@@ -67,7 +82,6 @@ const CategoryPage = async ({ params }) => {
                                     <span>{new Date(blog.publishedDate).toLocaleDateString()}</span>
                                     <span>By: {blog?.createdBy?.name || 'Unknown'}</span>
                                 </div>
-                                {/* Read More */}
                                 <Link
                                     href={`/${category.toLowerCase()}/${blog.slug}`}
                                     className="mt-4 text-sm font-semibold text-purple-600 hover:text-purple-800 transition"

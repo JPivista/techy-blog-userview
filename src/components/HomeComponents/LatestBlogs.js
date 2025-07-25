@@ -35,7 +35,7 @@ const LatestBlogs = () => {
     if (error) return <div className="text-center text-red-500 mt-10">Error: {error}</div>;
 
     return (
-        <div className="max-w-7xl mx-auto px-4 py-10">
+        <div className="max-w-7xl mx-auto px-4 py-10 relative">
             <h2 className="text-4xl font-extrabold text-center bg-gradient-to-r from-purple-600 via-pink-500 to-yellow-400 bg-clip-text text-transparent mb-12">
                 Latest Blog Posts
             </h2>
@@ -43,61 +43,88 @@ const LatestBlogs = () => {
             {blogs.length === 0 ? (
                 <p className="text-center text-gray-500">No published blogs available.</p>
             ) : (
-                <Swiper
-                    spaceBetween={30}
-                    slidesPerView={1}
-                    loop={true}
-                    navigation={true}
-                    pagination={{ clickable: true }}
-                    autoplay={{ delay: 3000 }}
-                    breakpoints={{
-                        640: { slidesPerView: 1 },
-                        768: { slidesPerView: 2 },
-                        1024: { slidesPerView: 3 },
-                    }}
-                    modules={[Navigation, Pagination, Autoplay]}
-                >
-                    {blogs.map((blog) => (
-                        <SwiperSlide key={blog._id} className='p-3'>
-                            <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition h-full flex flex-col justify-between">
-                                {/* Image or fallback */}
-                                {blog.image ? (
-                                    <img
-                                        src={blog.image}
-                                        alt={blog.title}
-                                        className="w-full h-48 object-cover"
-                                    />
-                                ) : (
-                                    <div className="w-full h-48 flex items-center justify-center text-3xl font-bold text-white bg-gradient-to-r from-purple-600 via-pink-500 to-yellow-400 shadow-lg animate-pulse">
-                                        <span className="drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]">techyblog</span>
-                                    </div>
-                                )}
+                <>
+                    <Swiper
+                        spaceBetween={30}
+                        slidesPerView={1}
+                        loop={true}
+                        navigation={{
+                            nextEl: '.custom-next',
+                            prevEl: '.custom-prev',
+                        }}
+                        pagination={{ clickable: true }}
+                        autoplay={{ delay: 3000 }}
+                        breakpoints={{
+                            640: { slidesPerView: 1 },
+                            768: { slidesPerView: 2 },
+                            1024: { slidesPerView: 3 },
+                        }}
+                        modules={
+                            [
+                                Navigation,
+                                // Pagination,
+                                // Autoplay
+                            ]
+                        }
+                    >
+                        {blogs.map((blog) => (
+                            <SwiperSlide key={blog._id} className="p-3">
+                                <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition h-full flex flex-col justify-between">
+                                    {/* Image or fallback */}
+                                    {blog.image ? (
+                                        <img
+                                            src={blog.image}
+                                            alt={blog.title}
+                                            className="w-full h-48 object-cover"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-48 flex items-center justify-center text-3xl font-bold text-white bg-gradient-to-r from-purple-600 via-pink-500 to-yellow-400 shadow-lg animate-pulse">
+                                            <span className="drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]">
+                                                {blog.category}
+                                            </span>
+                                        </div>
+                                    )}
 
-                                {/* Content */}
-                                <div className="p-4 flex flex-col justify-between flex-grow">
-                                    <h3 className="text-lg font-semibold text-blue-700 mb-2 line-clamp-2">
-                                        {blog.title}
-                                    </h3>
-                                    <div
-                                        className="text-gray-600 text-sm line-clamp-3"
-                                        dangerouslySetInnerHTML={{ __html: blog.description }}
-                                    />
-                                    <div className="text-sm text-gray-400 mt-2 flex justify-between">
-                                        <span>{blog?.publishedDate ? new Date(blog.publishedDate).toLocaleDateString() : 'No Date'}</span>
-                                        <span>By: {blog?.createdBy?.name || 'Unknown'}</span>
-                                    </div>
-                                    <Link
-                                        href={`/${blog.subcategories[0]?.name.toLowerCase()}/${blog.slug}`}
-                                        className="mt-4 text-sm font-semibold text-purple-600 hover:text-purple-800 transition"
-                                    >
-                                        Read More →
-                                    </Link>
+                                    {/* Content */}
+                                    <div className="p-4 flex flex-col justify-between flex-grow overflow-hidden max-h-64">
+                                        <h3 className="text-lg font-semibold text-blue-700 mb-2 line-clamp-2">
+                                            {blog.title}
+                                        </h3>
+                                        <div
+                                            className="text-gray-600 text-sm overflow-hidden leading-relaxed prose max-w-none max-h-[4.5rem] line-clamp-3 [&_*]:text-sm [&_*]:leading-relaxed [&_*]:font-normal"
+                                            dangerouslySetInnerHTML={{ __html: blog.description }}
+                                        />
 
+                                        <div className="text-sm text-gray-400 mt-2 flex justify-between">
+                                            <span>{blog?.publishedDate ? new Date(blog.publishedDate).toLocaleDateString() : 'No Date'}</span>
+                                            <span>By: {blog?.createdBy?.name || 'Unknown'}</span>
+                                        </div>
+                                        {blog?.subcategories?.[0]?.name && (
+                                            <Link
+                                                href={`/${blog.subcategories[0].name.toLowerCase()}/${blog.slug}`}
+                                                className="mt-4 text-sm font-semibold text-purple-600 hover:text-purple-800 transition"
+                                            >
+                                                Read More →
+                                            </Link>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-                        </SwiperSlide>
-                    ))}
-                </Swiper>
+                            </SwiperSlide>
+                        ))}
+                    </Swiper>
+
+                    {/* Custom Navigation Arrows */}
+                    <div className="custom-prev absolute top-1/2 -left-5 transform -translate-y-1/2 cursor-pointer z-10">
+                        <div className="w-10 h-10 bg-purple-600 text-white rounded-full flex items-center justify-center shadow hover:bg-purple-800 transition">
+                            &#8592;
+                        </div>
+                    </div>
+                    <div className="custom-next absolute top-1/2 -right-5 transform -translate-y-1/2 cursor-pointer z-10">
+                        <div className="w-10 h-10 bg-purple-600 text-white rounded-full flex items-center justify-center shadow hover:bg-purple-800 transition">
+                            &#8594;
+                        </div>
+                    </div>
+                </>
             )}
         </div>
     );

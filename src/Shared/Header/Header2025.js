@@ -50,8 +50,8 @@ const Header = () => {
                         );
                     })}
                     <Link
-                        href="/contact"
-                        className={`ml-2 ${pathname === "/contact"
+                        href="/contact-us"
+                        className={`ml-2 ${pathname === "/contact-us"
                             ? "text-purple-600 font-semibold underline"
                             : "text-purple-600"
                             } hover:underline`}
@@ -95,7 +95,7 @@ const Header = () => {
                         <Link
                             href="/contact-us"
                             onClick={() => setIsOpen(false)}
-                            className={`mt-2 ${pathname === "/contact"
+                            className={`mt-2 ${pathname === "/contact-us"
                                 ? "text-purple-600 font-semibold underline"
                                 : "text-purple-600"
                                 } hover:underline`}
