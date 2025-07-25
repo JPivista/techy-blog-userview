@@ -63,7 +63,7 @@ const LatestBlogs = () => {
                             [
                                 Navigation,
                                 // Pagination,
-                                // Autoplay
+                                Autoplay
                             ]
                         }
                     >

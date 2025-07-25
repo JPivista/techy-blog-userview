@@ -18,7 +18,6 @@ export async function POST(req) {
         const adminMail = {
             sender,
             to: [
-                { email: 'vivek@suitematrix.co' },
                 { email: 'jp@ivistasolutions.com' },
                 { email: 'mvivekraz@gmail.com' },
             ],

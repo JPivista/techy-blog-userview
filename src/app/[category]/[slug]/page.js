@@ -45,6 +45,23 @@ export default async function BlogDetailsPage({ params }) {
         <div className="max-w-6xl mx-auto py-10 px-4 grid grid-cols-1 md:grid-cols-3 gap-10">
             {/* Blog Content */}
             <div className="md:col-span-2">
+                {/* Breadcrumbs */}
+                <nav className="text-sm text-gray-500 mb-6">
+                    <ol className="list-reset flex space-x-2 items-center">
+                        <li>
+                            <Link href="/" className="hover:underline text-purple-600">Home</Link>
+                        </li>
+                        <li>/</li>
+                        <li>
+                            <Link href={`/${category}`} className="hover:underline text-purple-600 capitalize">
+                                {category.replace(/-/g, ' ')}
+                            </Link>
+                        </li>
+                        <li>/</li>
+                        <li className="text-gray-700 capitalize line-clamp-1">{slug.replace(/-/g, ' ')}</li>
+                    </ol>
+                </nav>
+
                 <h1 className="text-4xl font-bold mb-4 text-purple-700">{blog.title}</h1>
                 <div
                     className="text-gray-700 leading-7 prose max-w-none"

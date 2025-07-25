@@ -23,7 +23,7 @@ const FloatingButtons = () => {
     };
 
     const encodedMessage = encodeURIComponent(`Hi, this is ${name}. I want to enquire.`);
-    const whatsappLink = `https://wa.me/916381160145?text=${encodedMessage}`;
+    const whatsappLink = `https://wa.me/918883542106?text=${encodedMessage}`;
 
     return (
         <>

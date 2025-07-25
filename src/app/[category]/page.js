@@ -45,6 +45,18 @@ const CategoryPage = async ({ params }) => {
 
     return (
         <div className="max-w-6xl mx-auto px-4 py-10">
+            {/* ✅ Breadcrumbs */}
+            <nav className="text-sm text-gray-500 mb-4">
+                <ul className="flex items-center gap-2">
+                    <li>
+                        <Link href="/" className="hover:underline text-purple-600">Home</Link>
+                    </li>
+                    <li>/</li>
+                    <li className="text-gray-700 capitalize line-clamp-1">{category}</li>
+                </ul>
+            </nav>
+
+
             <h1 className="text-4xl font-bold text-center mb-8 capitalize">
                 {category} Blogs
             </h1>
