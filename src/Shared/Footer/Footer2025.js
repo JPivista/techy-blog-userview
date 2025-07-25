@@ -37,17 +37,14 @@ const Footer = () => {
                 {/* Column 3: Contact */}
                 <div>
                     <h4 className="font-semibold mb-4 text-lg">Contact Us</h4>
-                    <p className="text-gray-300 text-sm mb-2">Email: support@techyblog.com</p>
+                    <p className="text-gray-300 text-sm mb-2">
+                        <a href="mailto:support@techyblog.com" className="hover:underline">
+                            Email: support@techyblog.com
+                        </a>
+                    </p>
                     <p className="text-gray-300 text-sm mb-2 flex items-center gap-2">
-                        Phone: +91-9789222435
-                        <a
-                            href="https://wa.me/919789222435"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-green-500 hover:text-green-400 text-lg"
-                            aria-label="Chat on WhatsApp"
-                        >
-                            <FaWhatsapp />
+                        <a href="tel:+916381160145" className="hover:underline">
+                            Phone: +91-6381160145
                         </a>
                     </p>
                     <p className="text-gray-300 text-sm">Address: Bengaluru, India</p>
