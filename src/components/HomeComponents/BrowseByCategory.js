@@ -3,13 +3,13 @@ import CategoryCard from "./CategoryCard";
 
 const BrowseByCategory = ({ categories }) => {
     return (
-        <section className="w-full max-w-6xl mx-auto py-10 px-4">
-            <h2 className="text-4xl font-extrabold text-center bg-gradient-to-r from-purple-600 via-pink-500 to-yellow-400 bg-clip-text text-transparent mb-12">
+        <section className="w-full py-12 px-4">
+            <h2 className="text-4xl font-extrabold text-center mb-12 text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-pink-500 to-yellow-400">
                 Browse by Category
             </h2>
-            <div className="grid md:grid-cols-3 gap-10">
-                {categories.map((cat) => (
-                    <CategoryCard key={cat.name} {...cat} />
+            <div className="grid md:grid-cols-3 gap-10 max-w-6xl mx-auto">
+                {categories.map((cat, index) => (
+                    <CategoryCard key={cat.name} {...cat} index={index} />
                 ))}
             </div>
         </section>
