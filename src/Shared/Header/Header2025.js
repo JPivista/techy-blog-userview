@@ -75,7 +75,7 @@ const Header = () => {
                 <div className="md:hidden px-4 pb-4">
                     <nav className="flex flex-col gap-2 text-sm font-medium border-t border-gray-200 pt-4">
                         {categories.map((cat) => {
-                            const slug = `/category/${cat.toLowerCase().replace(/\s+/g, "-")}`;
+                            const slug = `/${cat.toLowerCase().replace(/\s+/g, "-")}`;
                             const isActive = pathname === slug;
 
                             return (
