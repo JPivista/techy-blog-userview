@@ -4,6 +4,7 @@ import { FaWhatsapp, FaArrowUp } from "react-icons/fa";
 
 const FloatingButtons = () => {
     const [showScrollTop, setShowScrollTop] = useState(false);
+    const name = "JP"; // You can replace this dynamically later if needed
 
     useEffect(() => {
         const handleScroll = () => {
@@ -21,11 +22,14 @@ const FloatingButtons = () => {
         window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
+    const encodedMessage = encodeURIComponent(`Hi, this is ${name}. I want to enquire.`);
+    const whatsappLink = `https://wa.me/916381160145?text=${encodedMessage}`;
+
     return (
         <>
             {/* WhatsApp Floating Button */}
             <a
-                href="https://wa.me/918883542106"
+                href={whatsappLink}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="fixed bottom-6 right-6 z-50 bg-green-500 hover:bg-green-600 text-white p-3 rounded-full shadow-lg transition duration-300"
