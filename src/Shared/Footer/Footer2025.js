@@ -42,12 +42,12 @@ const Footer = () => {
                             Email: support@techyblog.com
                         </a>
                     </p>
-                    <p className="text-gray-300 text-sm mb-2 flex items-center gap-2">
+                    {/* <p className="text-gray-300 text-sm mb-2 flex items-center gap-2">
                         <a href="tel:+916381160145" className="hover:underline">
                             Phone: +91-6381160145
                         </a>
-                    </p>
-                    <p className="text-gray-300 text-sm">Address: Bengaluru, India</p>
+                    </p> */}
+                    {/* <p className="text-gray-300 text-sm">Address: Bengaluru, India</p> */}
                 </div>
             </div>
 

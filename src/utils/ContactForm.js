@@ -2,7 +2,12 @@
 import React, { useState } from 'react';
 
 const ContactForm = () => {
-    const [formData, setFormData] = useState({ name: '', email: '', message: '' });
+    const [formData, setFormData] = useState({
+        name: '',
+        email: '',
+        message: '',
+        formName: 'contact form'
+    });
     const [submitted, setSubmitted] = useState(false);
     const [loading, setLoading] = useState(false);
 
@@ -14,27 +19,68 @@ const ContactForm = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
+
+        // Debug: Log the data being sent
+        console.log('📤 Data being sent to APIs:', formData);
+
         try {
-            const res = await fetch('/api/sendMail', {
+            // Send to local API (existing functionality)
+            const localRes = await fetch('/api/sendMail', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData),
             });
 
-            const result = await res.json();
+            const localResult = await localRes.json();
+
+            // Send to backend API
+            let backendSuccess = false;
+            let backendResult = null;
+
+            try {
+                console.log('📤 Sending to backend API:', JSON.stringify(formData));
+                const backendRes = await fetch('http://localhost:7010/api/contacts/createContact', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData),
+                });
+
+                backendResult = await backendRes.json();
+                backendSuccess = backendRes.ok;
+
+                if (!backendRes.ok) {
+                    console.error('Backend API Error:', backendRes.status, backendRes.statusText);
+                    console.error('Backend Response:', backendResult);
+                } else {
+                    console.log('✅ Backend received data successfully:', backendResult);
+                }
+            } catch (backendError) {
+                console.error('Backend API Connection Error:', backendError);
+                console.log('Please check if your backend server is running on http://localhost:7010');
+            }
+
             setLoading(false);
 
-            if (result.success) {
+            // Check if local API was successful (email sending)
+            if (localResult.success) {
                 setSubmitted(true);
-                setFormData({ name: '', email: '', message: '' });
+                setFormData({ name: '', email: '', message: '', formName: 'contact form' });
+
+                if (backendSuccess) {
+                    console.log('✅ Data sent successfully to both APIs');
+                    console.log('Backend response:', backendResult);
+                } else {
+                    console.log('⚠️ Email sent successfully, but backend storage failed');
+                    console.log('Backend error:', backendResult);
+                }
             } else {
                 alert('Something went wrong. Try again.');
-                console.log(result.error);
+                console.log('Local API error:', localResult.error);
             }
         } catch (err) {
             setLoading(false);
             alert('Server error!');
-            console.error(err);
+            console.error('Error details:', err);
         }
     };
 
@@ -46,6 +92,13 @@ const ContactForm = () => {
                 </h2>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* Hidden field for formName */}
+                    <input
+                        type="hidden"
+                        name="formName"
+                        value={formData.formName}
+                    />
+
                     <div>
                         <label className="block mb-2 text-sm font-medium">Name</label>
                         <input

@@ -1,19 +1,43 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react"; // Optional: can use heroicons/react-icons too
 
-const categories = [
-    "Science", "Technology", "Business", "Cinema", "Sports", "Gaming",
-    "Healthcare", "Education", "Politics", "Lifestyle", "Travel",
-    "Environment", "Food", "Fashion", "Finance", "History", "Law & Government"
-];
-
 const Header = () => {
     const [isOpen, setIsOpen] = useState(false);
+    const [categories, setCategories] = useState([]);
+    const [categoriesLoading, setCategoriesLoading] = useState(true);
     const pathname = usePathname();
+
+    // Fetch categories from backend
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/categories`);
+                if (response.ok) {
+                    const result = await response.json();
+
+                    // Handle the response structure
+                    if (result.success && result.data) {
+                        setCategories(result.data);
+                        console.log('📋 Header categories loaded:', result.data);
+                    } else {
+                        console.error('Invalid categories response structure');
+                    }
+                } else {
+                    console.error('Failed to fetch categories for header');
+                }
+            } catch (error) {
+                console.error('Error fetching categories for header:', error);
+            } finally {
+                setCategoriesLoading(false);
+            }
+        };
+
+        fetchCategories();
+    }, []);
 
     const toggleMenu = () => {
         setIsOpen(!isOpen);
@@ -32,23 +56,27 @@ const Header = () => {
 
                 {/* Desktop Navigation */}
                 <nav className="hidden md:flex flex-wrap gap-4 text-sm font-medium">
-                    {categories.slice(0, 6).map((cat) => {
-                        const slug = `/${cat.toLowerCase().replace(/\s+/g, "-")}`;
-                        const isActive = pathname === slug;
+                    {categoriesLoading ? (
+                        <div className="text-gray-500">Loading categories...</div>
+                    ) : (
+                        categories.slice(0, 6).map((category) => {
+                            const slug = `/${category.slug || category.name.toLowerCase().replace(/\s+/g, "-")}`;
+                            const isActive = pathname === slug;
 
-                        return (
-                            <Link
-                                key={cat}
-                                href={slug}
-                                className={`${isActive
-                                    ? "text-purple-600 font-semibold border-b-2 border-purple-600"
-                                    : "text-gray-700"
-                                    } hover:text-purple-600 transition pb-1`}
-                            >
-                                {cat}
-                            </Link>
-                        );
-                    })}
+                            return (
+                                <Link
+                                    key={category._id}
+                                    href={slug}
+                                    className={`${isActive
+                                        ? "text-purple-600 font-semibold border-b-2 border-purple-600"
+                                        : "text-gray-700"
+                                        } hover:text-purple-600 transition pb-1`}
+                                >
+                                    {category.name}
+                                </Link>
+                            );
+                        })
+                    )}
                     <Link
                         href="/contact-us"
                         className={`ml-2 ${pathname === "/contact-us"
@@ -74,24 +102,28 @@ const Header = () => {
             {isOpen && (
                 <div className="md:hidden px-4 pb-4">
                     <nav className="flex flex-col gap-2 text-sm font-medium border-t border-gray-200 pt-4">
-                        {categories.map((cat) => {
-                            const slug = `/${cat.toLowerCase().replace(/\s+/g, "-")}`;
-                            const isActive = pathname === slug;
+                        {categoriesLoading ? (
+                            <div className="text-gray-500">Loading categories...</div>
+                        ) : (
+                            categories.map((category) => {
+                                const slug = `/${category.slug || category.name.toLowerCase().replace(/\s+/g, "-")}`;
+                                const isActive = pathname === slug;
 
-                            return (
-                                <Link
-                                    key={cat}
-                                    href={slug}
-                                    onClick={() => setIsOpen(false)}
-                                    className={`${isActive
-                                        ? "text-purple-600 font-semibold"
-                                        : "text-gray-700"
-                                        } hover:text-purple-600 transition`}
-                                >
-                                    {cat}
-                                </Link>
-                            );
-                        })}
+                                return (
+                                    <Link
+                                        key={category._id}
+                                        href={slug}
+                                        onClick={() => setIsOpen(false)}
+                                        className={`${isActive
+                                            ? "text-purple-600 font-semibold"
+                                            : "text-gray-700"
+                                            } hover:text-purple-600 transition`}
+                                    >
+                                        {category.name}
+                                    </Link>
+                                );
+                            })
+                        )}
                         <Link
                             href="/contact-us"
                             onClick={() => setIsOpen(false)}

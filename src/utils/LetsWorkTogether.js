@@ -18,6 +18,7 @@ const LetsWorkTogether = () => {
         email: '',
         phone: '',
         message: '',
+        formName: 'lets work together'
     });
 
     const toggleOption = (id) => {
@@ -46,18 +47,62 @@ const LetsWorkTogether = () => {
 
         const payload = { ...formData, services: selected };
 
+        // Debug: Log the data being sent
+        console.log('📤 Data being sent to APIs:', payload);
+
         try {
-            const response = await fetch('/api/sendMail/work-together', {
+            // Send to local API (existing functionality)
+            const localRes = await fetch('/api/sendMail/work-together', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
             });
 
-            if (!response.ok) throw new Error('Network error');
+            const localResult = await localRes.json();
 
-            setFormData({ name: '', company: '', email: '', phone: '', message: '' });
-            setSelected([]);
-            setShowModal(true);
+            // Send to backend API
+            let backendSuccess = false;
+            let backendResult = null;
+
+            try {
+                console.log('📤 Sending to backend API:', JSON.stringify(payload));
+                const backendRes = await fetch('http://localhost:7010/api/contacts/createContact', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+
+                backendResult = await backendRes.json();
+                backendSuccess = backendRes.ok;
+
+                if (!backendRes.ok) {
+                    console.error('Backend API Error:', backendRes.status, backendRes.statusText);
+                    console.error('Backend Response:', backendResult);
+                } else {
+                    console.log('✅ Backend received data successfully:', backendResult);
+                }
+            } catch (backendError) {
+                console.error('Backend API Connection Error:', backendError);
+                console.log('Please check if your backend server is running on http://localhost:7010');
+            }
+
+            // Check if local API was successful (email sending)
+            if (localRes.ok) {
+                setFormData({ name: '', company: '', email: '', phone: '', message: '', formName: 'lets work together' });
+                setSelected([]);
+                setShowModal(true);
+
+                if (backendSuccess) {
+                    console.log('✅ Data sent successfully to both APIs');
+                    console.log('Backend response:', backendResult);
+                } else {
+                    console.log('⚠️ Email sent successfully, but backend storage failed');
+                    console.log('Backend error:', backendResult);
+                }
+            } else {
+                alert("Something went wrong. Please try again.");
+                console.log('Local API error:', localResult);
+            }
         } catch (error) {
             console.error('Form submission error:', error);
             alert("Something went wrong. Please try again.");

@@ -97,7 +97,9 @@ const LatestBlogs = () => {
 
                                         <div className="text-sm text-gray-400 mt-2 flex justify-between">
                                             <span>{blog?.publishedDate ? new Date(blog.publishedDate).toLocaleDateString() : 'No Date'}</span>
-                                            <span>By: {blog?.createdBy?.name || 'Unknown'}</span>
+                                            <span className="text-purple-600 font-medium">
+                                                By: {blog?.authorName || 'Unknown'}
+                                            </span>
                                         </div>
                                         {blog?.subcategories?.[0]?.name && (
                                             <Link
