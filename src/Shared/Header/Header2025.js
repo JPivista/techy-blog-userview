@@ -3,10 +3,11 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X } from "lucide-react"; // Optional: can use heroicons/react-icons too
+import { Menu, X, ChevronDown } from "lucide-react";
 
 const Header = () => {
     const [isOpen, setIsOpen] = useState(false);
+    const [showCategoriesPopup, setShowCategoriesPopup] = useState(false);
     const [categories, setCategories] = useState([]);
     const [categoriesLoading, setCategoriesLoading] = useState(true);
     const pathname = usePathname();
@@ -43,6 +44,18 @@ const Header = () => {
         setIsOpen(!isOpen);
     };
 
+    const toggleCategoriesPopup = () => {
+        setShowCategoriesPopup(!showCategoriesPopup);
+    };
+
+    const closeCategoriesPopup = () => {
+        setShowCategoriesPopup(false);
+    };
+
+    // Show only first 3 categories in desktop header
+    const visibleCategories = categories.slice(0, 6);
+    const remainingCategories = categories.slice(6);
+
     return (
         <header className="w-full bg-white shadow sticky top-0 z-50">
             <div className="max-w-7xl mx-auto flex items-center justify-between px-4 py-4">
@@ -55,28 +68,88 @@ const Header = () => {
                 </Link>
 
                 {/* Desktop Navigation */}
-                <nav className="hidden md:flex flex-wrap gap-4 text-sm font-medium">
+                <nav className="hidden md:flex flex-wrap gap-4 text-sm font-medium items-center">
                     {categoriesLoading ? (
                         <div className="text-gray-500">Loading categories...</div>
                     ) : (
-                        categories.slice(0, 6).map((category) => {
-                            const slug = `/${category.slug || category.name.toLowerCase().replace(/\s+/g, "-")}`;
-                            const isActive = pathname === slug;
+                        <>
+                            {/* First 3 categories */}
+                            {visibleCategories.map((category) => {
+                                const slug = `/${category.slug || category.name.toLowerCase().replace(/\s+/g, "-")}`;
+                                const isActive = pathname === slug;
 
-                            return (
-                                <Link
-                                    key={category._id}
-                                    href={slug}
-                                    className={`${isActive
-                                        ? "text-purple-600 font-semibold border-b-2 border-purple-600"
-                                        : "text-gray-700"
-                                        } hover:text-purple-600 transition pb-1`}
-                                >
-                                    {category.name}
-                                </Link>
-                            );
-                        })
+                                return (
+                                    <Link
+                                        key={category._id}
+                                        href={slug}
+                                        className={`${isActive
+                                            ? "text-purple-600 font-semibold border-b-2 border-purple-600"
+                                            : "text-gray-700"
+                                            } hover:text-purple-600 transition pb-1`}
+                                    >
+                                        {category.name}
+                                    </Link>
+                                );
+                            })}
+
+                            {/* View More Categories Button */}
+                            {remainingCategories.length > 0 && (
+                                <div className="relative">
+                                    <button
+                                        onClick={toggleCategoriesPopup}
+                                        className="flex items-center gap-1 text-purple-600 hover:text-purple-800 font-semibold transition pb-1"
+                                    >
+                                        More Categories
+                                        <ChevronDown
+                                            size={16}
+                                            className={`transition-transform ${showCategoriesPopup ? 'rotate-180' : ''}`}
+                                        />
+                                    </button>
+
+                                    {/* Categories Popup */}
+                                    {showCategoriesPopup && (
+                                        <>
+                                            {/* Backdrop */}
+                                            <div
+                                                className="fixed inset-0 z-40"
+                                                onClick={closeCategoriesPopup}
+                                            />
+
+                                            {/* Popup Content */}
+                                            <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-48 py-2">
+                                                <div className="px-4 py-2 border-b border-gray-100">
+                                                    <h3 className="text-sm font-semibold text-gray-700">
+                                                        All Categories
+                                                    </h3>
+                                                </div>
+                                                <div className="max-h-64 overflow-y-auto">
+                                                    {remainingCategories.map((category) => {
+                                                        const slug = `/${category.slug || category.name.toLowerCase().replace(/\s+/g, "-")}`;
+                                                        const isActive = pathname === slug;
+
+                                                        return (
+                                                            <Link
+                                                                key={category._id}
+                                                                href={slug}
+                                                                onClick={closeCategoriesPopup}
+                                                                className={`block px-4 py-2 text-sm hover:bg-gray-50 transition ${isActive
+                                                                    ? "text-purple-600 font-semibold bg-purple-50"
+                                                                    : "text-gray-700"
+                                                                    }`}
+                                                            >
+                                                                {category.name}
+                                                            </Link>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            )}
+                        </>
                     )}
+
                     <Link
                         href="/contact-us"
                         className={`ml-2 ${pathname === "/contact-us"
@@ -124,6 +197,7 @@ const Header = () => {
                                 );
                             })
                         )}
+
                         <Link
                             href="/contact-us"
                             onClick={() => setIsOpen(false)}
