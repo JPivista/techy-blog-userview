@@ -199,7 +199,7 @@ const WriteYourBlog = () => {
                         Write Your Blog
                     </h2>
                     <p className="text-gray-300 text-lg max-w-2xl mx-auto">
-                        Share your knowledge and insights with our community. Submit your blog content and we'll review and publish it for you.
+                        Share your knowledge and insights with our community. Submit your blog content and we&apos;ll review and publish it for you.
                     </p>
                 </div>
 
