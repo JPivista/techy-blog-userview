@@ -37,7 +37,7 @@ const FooterTestimonials = () => {
                             ))}
                         </div>
                         <p className="text-gray-300 mb-4 italic">
-                            "{testimonial.content}"
+                            &ldquo;{testimonial.content}&rdquo;
                         </p>
                         <div className="text-center">
                             <div className="font-semibold text-white">
