@@ -95,7 +95,12 @@ async function getBlog(slug) {
         });
         if (!res.ok) return null;
         const blog = await res.json();
-        return blog;
+
+        // Only return published blogs
+        if (blog && blog.status === 'published') {
+            return blog;
+        }
+        return null;
     } catch (error) {
         console.error('Error fetching blog:', error);
         return null;
@@ -126,10 +131,11 @@ export default async function BlogDetailsPage({ params }) {
         notFound();
     }
 
-    // Filter related blogs: same category, not the current blog
+    // Filter related blogs: same category, not the current blog, only published
     const relatedBlogs = allBlogs.filter(
         (b) =>
             b._id !== blog._id &&
+            b.status === 'published' &&
             b.categoryIds?.some(
                 (cat) => blog.categoryIds?.some((blogCat) => blogCat.name === cat.name)
             )

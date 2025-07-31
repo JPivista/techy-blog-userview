@@ -70,11 +70,11 @@ async function getCategoryBlogs(category) {
         const data = await res.json();
         const allBlogs = data.blogs || [];
 
-        // Filter by main categories
+        // Filter by main categories and only published blogs
         const matchingBlogs = allBlogs.filter((blog) =>
             blog.categoryIds?.some(
                 (cat) => cat.name.toLowerCase() === category.toLowerCase()
-            )
+            ) && blog.status === 'published'
         );
 
         return { blogs: matchingBlogs, isValid: matchingBlogs.length > 0 };
