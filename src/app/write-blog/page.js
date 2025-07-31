@@ -208,7 +208,7 @@ const WriteBlogPage = () => {
                         <FaHeart className="text-2xl text-red-400 animate-pulse" />
                     </div>
                     <p className="text-gray-300 mb-6">
-                        Don&apos;t wait - start sharing your knowledge today and make a difference in someone's life.
+                        Don&apos;t wait - start sharing your knowledge today and make a difference in someone&apos;s life.
                     </p>
                     <Link
                         href="/write-your-blog"
