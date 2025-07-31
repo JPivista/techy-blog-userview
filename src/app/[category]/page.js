@@ -159,7 +159,7 @@ export default async function CategoryPage({ params }) {
                         {blogs.map((blog) => (
                             <div
                                 key={blog._id}
-                                className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition flex flex-col"
+                                className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition flex flex-col h-full"
                             >
                                 {blog.image ? (
                                     <img
@@ -174,25 +174,28 @@ export default async function CategoryPage({ params }) {
                                 )}
 
                                 <div className="p-4 flex flex-col flex-grow">
-                                    <h3 className="text-lg font-semibold text-blue-700 mb-2 line-clamp-2">
+                                    <h3 className="text-lg font-semibold text-blue-700 mb-2 line-clamp-2 min-h-[3.5rem]">
                                         {blog.title}
                                     </h3>
                                     <div
-                                        className="text-gray-600 text-sm mb-4 line-clamp-3"
+                                        className="text-gray-600 text-sm mb-4 line-clamp-3 min-h-[4.5rem]"
                                         dangerouslySetInnerHTML={{ __html: blog.description }}
                                     />
-                                    <div className="text-xs text-gray-400 mt-auto flex justify-between">
-                                        <span>
-                                            {new Date(blog.publishedDate).toLocaleDateString()}
-                                        </span>
-                                        <span>By: {blog?.authorName || 'Unknown'}</span>
+
+                                    <div className="mt-auto">
+                                        <div className="text-xs text-gray-400 mb-2 flex justify-between">
+                                            <span>
+                                                {new Date(blog.publishedDate).toLocaleDateString()}
+                                            </span>
+                                            <span>By: {blog?.authorName || 'Unknown'}</span>
+                                        </div>
+                                        <Link
+                                            href={`/${category.toLowerCase()}/${blog.slug}`}
+                                            className="text-sm font-semibold text-purple-600 hover:text-purple-800 transition"
+                                        >
+                                            Read More →
+                                        </Link>
                                     </div>
-                                    <Link
-                                        href={`/${category.toLowerCase()}/${blog.slug}`}
-                                        className="mt-4 text-sm font-semibold text-purple-600 hover:text-purple-800 transition"
-                                    >
-                                        Read More →
-                                    </Link>
                                 </div>
                             </div>
                         ))}

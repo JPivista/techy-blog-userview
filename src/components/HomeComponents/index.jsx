@@ -6,6 +6,7 @@ import WhyTechyBlog from "./WhyTechyBlog";
 import LatestBlogs from "./LatestBlogs";
 import WhatWeDo from "./WhatWeDo";
 import WriteBlogCTA from "./WriteBlogCTA";
+import BlogPopup from "./BlogPopup";
 
 import {
     FaLaptopCode,
@@ -82,6 +83,7 @@ export default function Home({ blogs }) {
 
     return (
         <>
+            {/* <BlogPopup /> */}
             <HeroSection />
             <LatestBlogs />
             <WhyTechyBlog />

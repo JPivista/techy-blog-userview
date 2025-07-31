@@ -69,7 +69,7 @@ const LatestBlogs = () => {
                     >
                         {blogs.map((blog) => (
                             <SwiperSlide key={blog._id} className="p-3">
-                                <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition h-full flex flex-col justify-between">
+                                <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition h-full flex flex-col">
                                     {/* Image or fallback */}
                                     {blog.image ? (
                                         <img
@@ -86,29 +86,29 @@ const LatestBlogs = () => {
                                     )}
 
                                     {/* Content */}
-                                    <div className="p-4 flex flex-col justify-between flex-grow overflow-hidden max-h-64">
-                                        <h3 className="text-lg font-semibold text-blue-700 mb-2 line-clamp-2">
+                                    <div className="p-4 flex flex-col flex-grow">
+                                        <h3 className="text-lg font-semibold text-blue-700 mb-2 line-clamp-2 min-h-[3.5rem]">
                                             {blog.title}
                                         </h3>
                                         <div
-                                            className="text-gray-600 text-sm overflow-hidden leading-relaxed prose max-w-none max-h-[4.5rem] line-clamp-3 [&_*]:text-sm [&_*]:leading-relaxed [&_*]:font-normal"
+                                            className="text-gray-600 text-sm mb-4 line-clamp-3 min-h-[4.5rem]"
                                             dangerouslySetInnerHTML={{ __html: blog.description }}
                                         />
 
-                                        <div className="text-sm text-gray-400 mt-2 flex justify-between">
-                                            <span>{blog?.publishedDate ? new Date(blog.publishedDate).toLocaleDateString() : 'No Date'}</span>
-                                            <span className="text-purple-600 font-medium">
-                                                By: {blog?.authorName || 'Unknown'}
-                                            </span>
-                                        </div>
-                                        {blog?.subcategories?.[0]?.name && (
+                                        <div className="mt-auto">
+                                            <div className="text-sm text-gray-400 mb-2 flex justify-between">
+                                                <span>{blog?.publishedDate ? new Date(blog.publishedDate).toLocaleDateString() : 'No Date'}</span>
+                                                <span className="text-purple-600 font-medium">
+                                                    By: {blog?.authorName || 'Unknown'}
+                                                </span>
+                                            </div>
                                             <Link
-                                                href={`/${blog.subcategories[0].name.toLowerCase()}/${blog.slug}`}
-                                                className="mt-4 text-sm font-semibold text-purple-600 hover:text-purple-800 transition"
+                                                href={`/${blog.categoryIds?.[0]?.name?.toLowerCase() || 'blog'}/${blog.slug}`}
+                                                className="text-sm font-semibold text-purple-600 hover:text-purple-800 transition"
                                             >
                                                 Read More →
                                             </Link>
-                                        )}
+                                        </div>
                                     </div>
                                 </div>
                             </SwiperSlide>
