@@ -95,12 +95,12 @@ const WriteBlogPage = () => {
                                 <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-600 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10 blur-sm"></div>
                             </button>
 
-                            <Link
+                            {/* <Link
                                 href="/contact-us"
                                 className="px-8 py-4 bg-white/10 backdrop-blur-sm border border-white/30 text-white font-bold rounded-xl hover:bg-white/20 transition-all duration-300"
                             >
                                 Learn More
-                            </Link>
+                            </Link> */}
                         </div>
 
                         {/* Stats */}

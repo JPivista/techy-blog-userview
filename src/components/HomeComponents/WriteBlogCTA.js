@@ -12,16 +12,17 @@ import {
     FaGlobe,
     FaTrophy
 } from 'react-icons/fa';
+import BurstButton from '../../Shared/BurstButton';
 
 const WriteBlogCTA = () => {
     const router = useRouter();
     const [isHovered, setIsHovered] = useState(false);
 
     const highlights = [
-        {
-            icon: <FaUsers className="text-2xl text-blue-400" />,
-            text: "Join 500+ Authors"
-        },
+        // {
+        //     icon: <FaUsers className="text-2xl text-blue-400" />,
+        //     text: "Join 500+ Authors"
+        // },
         {
             icon: <FaStar className="text-2xl text-yellow-400" />,
             text: "Build Your Authority"
@@ -64,7 +65,7 @@ const WriteBlogCTA = () => {
                     </p>
 
                     {/* Highlights */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 max-w-4xl mx-auto">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8 max-w-4xl mx-auto justify-center items-center">
                         {highlights.map((highlight, index) => (
                             <div
                                 key={index}
@@ -80,26 +81,7 @@ const WriteBlogCTA = () => {
 
                     {/* CTA Buttons */}
                     <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
-                        <button
-                            onClick={() => router.push('/write-blog')}
-                            onMouseEnter={() => setIsHovered(true)}
-                            onMouseLeave={() => setIsHovered(false)}
-                            className="group relative px-8 py-4 bg-gradient-to-r from-purple-600 via-pink-500 to-yellow-400 text-white font-bold rounded-xl shadow-2xl hover:scale-105 transition-all duration-300 transform"
-                        >
-                            <span className="flex items-center gap-2">
-                                <FaLightbulb className="text-xl" />
-                                Start Writing Today
-                                <FaArrowRight className={`transition-transform duration-300 ${isHovered ? 'translate-x-2' : ''}`} />
-                            </span>
-                            <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-600 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10 blur-sm"></div>
-                        </button>
-
-                        <Link
-                            href="/contact-us"
-                            className="px-8 py-4 bg-white/10 backdrop-blur-sm border border-white/30 text-white font-bold rounded-xl hover:bg-white/20 transition-all duration-300"
-                        >
-                            Learn More
-                        </Link>
+                        <BurstButton />
                     </div>
 
                     {/* Features */}
@@ -130,7 +112,7 @@ const WriteBlogCTA = () => {
                         Your knowledge can change lives. Start writing and share your story with the world.
                     </p>
                     <Link
-                        href="/write-blog"
+                        href="/write-your-blog"
                         className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-500 text-white font-semibold rounded-lg hover:scale-105 transition-all duration-300 shadow-lg"
                     >
                         <FaPen />
