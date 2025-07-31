@@ -17,7 +17,7 @@ const BlogSubmissionSuccess = () => {
 
                     <p className="text-xl text-gray-300 mb-8 leading-relaxed">
                         Thank you for sharing your knowledge with our community!
-                        We've received your blog submission and our team will review it shortly.
+                        We&apos;ve received your blog submission and our team will review it shortly.
                     </p>
 
                     <div className="bg-white/10 rounded-2xl p-6 mb-8">
@@ -29,7 +29,7 @@ const BlogSubmissionSuccess = () => {
                             </li>
                             <li className="flex items-center">
                                 <span className="text-green-400 mr-2">✓</span>
-                                We'll contact you if any edits are needed
+                                We&apos;ll contact you if any edits are needed
                             </li>
                             <li className="flex items-center">
                                 <span className="text-green-400 mr-2">✓</span>
@@ -37,7 +37,7 @@ const BlogSubmissionSuccess = () => {
                             </li>
                             <li className="flex items-center">
                                 <span className="text-green-400 mr-2">✓</span>
-                                You'll receive a notification when it's live
+                                You&apos;ll receive a notification when it&apos;s live
                             </li>
                         </ul>
                     </div>
