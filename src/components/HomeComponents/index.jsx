@@ -66,7 +66,7 @@ export default function Home({ blogs }) {
                         }));
 
                         setCategories(mappedCategories);
-                        console.log('📋 Home categories loaded:', mappedCategories);
+                        // console.log('📋 Home categories loaded:', mappedCategories);
                     }
                 } else {
                     console.error('Failed to fetch categories for home page');

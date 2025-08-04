@@ -15,7 +15,9 @@ export async function POST(req) {
             tags,
             metaTitle,
             metaDescription,
-            formName
+            formName,
+            emailVerified,
+            verificationTimestamp
         } = await req.json();
 
         const brevoAPI = 'https://api.brevo.com/v3/smtp/email';
@@ -35,10 +37,26 @@ export async function POST(req) {
                 { email: 'jp@ivistasolutions.com' },
                 { email: 'mvivekraz@gmail.com' },
             ],
-            subject: 'New Blog Submission - Write Your Blog',
+            subject: `${emailVerified ? '✅ Verified' : '❓ Unverified'} Blog Submission - Write Your Blog`,
             htmlContent: `
-                <h2>New Blog Submission</h2>
+                <h2>New Blog Submission ${emailVerified ? '(Email Verified ✅)' : '(Email Not Verified ❓)'}</h2>
                 <p><strong>Form Type:</strong> ${formName}</p>
+                
+                ${emailVerified ? `
+                <div style="background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 5px; padding: 10px; margin: 10px 0;">
+                    <h4 style="color: #155724; margin: 0;">✅ Email Verified</h4>
+                    <p style="color: #155724; margin: 5px 0 0 0; font-size: 14px;">
+                        Verified at: ${verificationTimestamp ? new Date(verificationTimestamp).toLocaleString() : 'Unknown'}
+                    </p>
+                </div>
+                ` : `
+                <div style="background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 5px; padding: 10px; margin: 10px 0;">
+                    <h4 style="color: #721c24; margin: 0;">❓ Email Not Verified</h4>
+                    <p style="color: #721c24; margin: 5px 0 0 0; font-size: 14px;">
+                        This submission was sent without email verification.
+                    </p>
+                </div>
+                `}
                 
                 <h3>Personal Information</h3>
                 <p><strong>Full Name:</strong> ${fullName}</p>

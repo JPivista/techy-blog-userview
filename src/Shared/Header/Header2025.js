@@ -23,7 +23,7 @@ const Header = () => {
                     // Handle the response structure
                     if (result.success && result.data) {
                         setCategories(result.data);
-                        console.log('📋 Header categories loaded:', result.data);
+                        // console.log('📋 Header categories loaded:', result.data);
                     } else {
                         console.error('Invalid categories response structure');
                     }

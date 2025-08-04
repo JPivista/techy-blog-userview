@@ -8,10 +8,10 @@ const BlogSubmissionSuccess = () => {
             <div className="max-w-2xl mx-auto text-center">
                 <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl p-12">
                     {/* Success Icon */}
-                    <div className="text-8xl mb-8 animate-bounce">🎉</div>
+                    <div className="text-6xl mb-2 animate-bounce">🎉</div>
 
                     {/* Success Message */}
-                    <h1 className="text-4xl md:text-5xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-600">
+                    <h1 className="text-4xl md:text-4xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-600">
                         Blog Submitted Successfully!
                     </h1>
 

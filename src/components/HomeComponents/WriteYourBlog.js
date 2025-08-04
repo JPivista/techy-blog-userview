@@ -15,9 +15,7 @@ const WriteYourBlog = () => {
         description: '',
         content: '',
 
-        // Categories (Required)
-        mainCategory: '',
-        subcategories: [],
+        // Categories (Fixed - removed mainCategory, subcategories)
         categories: [],
         tags: '',
 
@@ -27,24 +25,34 @@ const WriteYourBlog = () => {
 
         formName: 'write your blog'
     });
+
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(false);
     const [categoriesLoading, setCategoriesLoading] = useState(true);
+
+    // Verification Modal States
+    const [showVerification, setShowVerification] = useState(false);
+    const [submissionId, setSubmissionId] = useState('');
+    const [verificationCode, setVerificationCode] = useState('');
+    const [verificationLoading, setVerificationLoading] = useState(false);
+    const [verificationMessage, setVerificationMessage] = useState('');
+    const [verificationError, setVerificationError] = useState('');
+    const [isVerified, setIsVerified] = useState(false);
 
     // Fetch categories from backend
     useEffect(() => {
         const fetchCategories = async () => {
             try {
+                // Fixed: Direct call to backend without auth
                 const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/categories`, {
                     headers: {
                         'Accept': 'application/json',
-                        'Authorization': `Bearer ${process.env.NEXT_PUBLIC_API_TOKEN || ''}`,
                     }
                 });
                 if (response.ok) {
                     const result = await response.json();
 
-                    // Handle the new response structure
+                    // Handle the response structure
                     if (result.success && result.data) {
                         setCategories(result.data);
                         console.log('📋 Categories loaded:', result.data);
@@ -69,125 +77,148 @@ const WriteYourBlog = () => {
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
+    // Handle category selection (checkboxes)
+    const handleCategoryChange = (e) => {
+        const { value, checked } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            categories: checked
+                ? [...prev.categories, value]
+                : prev.categories.filter(cat => cat !== value)
+        }));
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
 
-        // Debug: Log the data being sent
-        console.log('📤 Data being sent to APIs:', formData);
-
         try {
-            // Send to local API (existing functionality)
-            const localRes = await fetch('/api/blog-submissions/submitBlog', {
+            // Prepare data for backend submission (direct integration)
+            const submissionData = {
+                fullName: formData.fullName,
+                email: formData.email,
+                mobileNumber: formData.mobileNumber,
+                title: formData.title,
+                description: formData.description,
+                content: formData.content,
+                categories: formData.categories, // Array of category names
+                tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag), // Convert to array
+                metaTitle: formData.metaTitle,
+                metaDescription: formData.metaDescription,
+                formName: formData.formName
+            };
+
+            console.log('📤 Submitting blog data directly to backend:', submissionData);
+
+            // Submit directly to backend API
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/blog-submissions/create-blog`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData),
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(submissionData)
             });
 
-            const localResult = await localRes.json();
-
-            // Send to backend API - FIXED ENDPOINT
-            let backendSuccess = false;
-            let backendResult = null;
-
-            try {
-                console.log('📤 Sending to backend API:', JSON.stringify(formData));
-
-                // FIXED: Use the correct backend endpoint with environment variables
-                const backendRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/blog-submissions/create-blog`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        // Add CORS headers if needed
-                        'Accept': 'application/json',
-                        'Authorization': `Bearer ${process.env.NEXT_PUBLIC_API_TOKEN || ''}`,
-                        // Alternative: Basic auth if needed
-                        // 'Authorization': `Basic ${btoa(`${process.env.NEXT_PUBLIC_API_USERNAME}:${process.env.NEXT_PUBLIC_API_PASSWORD}`)}`,
-                    },
-                    body: JSON.stringify({
-                        fullName: formData.fullName,
-                        email: formData.email,
-                        mobileNumber: formData.mobileNumber,
-                        title: formData.title,
-                        description: formData.description,
-                        content: formData.content,
-                        mainCategory: formData.mainCategory,
-                        tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
-                        metaTitle: formData.metaTitle,
-                        metaDescription: formData.metaDescription,
-                        categoryIds: formData.mainCategory ? [formData.mainCategory] : [],
-                        categories: formData.mainCategory ? [formData.mainCategory] : [],
-                        subcategories: [],
-                        isSubmission: true
-                    }),
-                });
-
-                backendResult = await backendRes.json();
-                backendSuccess = backendRes.ok;
-
-                if (!backendRes.ok) {
-                    console.error('Backend API Error:', backendRes.status, backendRes.statusText);
-                    console.error('Backend Response:', backendResult);
-
-                    // Handle authentication errors specifically
-                    if (backendRes.status === 401) {
-                        console.error('Authentication failed. Please check your API token.');
-                        console.error('Make sure NEXT_PUBLIC_API_TOKEN is set in your .env file');
-                    }
-                } else {
-                    console.log('✅ Backend received data successfully:', backendResult);
-                }
-            } catch (backendError) {
-                console.error('Backend API Connection Error:', backendError);
-                console.log(`Please check if your backend server is running on ${process.env.NEXT_PUBLIC_API_BASE_URL}`);
-            }
-
+            const result = await response.json();
             setLoading(false);
 
-            // Check if local API was successful (email sending)
-            if (localResult.success) {
-                setFormData({
-                    // Personal Information (Required)
-                    fullName: '',
-                    email: '',
-                    mobileNumber: '',
+            if (result.success) {
+                console.log('✅ Blog submitted successfully:', result);
 
-                    // Blog Content (Required)
-                    title: '',
-                    description: '',
-                    content: '',
-
-                    // Categories (Required)
-                    mainCategory: '',
-                    subcategories: [],
-                    categories: [],
-                    tags: '',
-
-                    // SEO Fields (Optional)
-                    metaTitle: '',
-                    metaDescription: '',
-
-                    formName: 'write your blog'
-                });
-
-                if (backendSuccess) {
-                    console.log('✅ Data sent successfully to both APIs');
-                    console.log('Backend response:', backendResult);
-                } else {
-                    console.log('⚠️ Email sent successfully, but backend storage failed');
-                    console.log('Backend error:', backendResult);
-                }
-
-                // Redirect to success page
-                router.push('/blog-submission-success');
+                // Show verification modal
+                setSubmissionId(result.data.submissionId);
+                setShowVerification(true);
+                setVerificationMessage('Blog submitted! Check your email for the verification code.');
             } else {
-                alert('Something went wrong. Try again.');
-                console.log('Local API error:', localResult.error);
+                alert(`Submission failed: ${result.message || 'Unknown error'}`);
+                console.error('Submission error:', result);
             }
         } catch (err) {
             setLoading(false);
-            alert('Server error!');
+            alert('Server error! Please try again.');
             console.error('Error details:', err);
+        }
+    };
+
+    const handleVerifyEmail = async (e) => {
+        e.preventDefault();
+        setVerificationLoading(true);
+        setVerificationMessage('');
+        setVerificationError('');
+
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/blog-submissions/verify-email`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    submissionId,
+                    verificationCode
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                setIsVerified(true);
+                setVerificationMessage('Email verified successfully! Your blog is now submitted for review.');
+
+                // Auto close after 3 seconds
+                setTimeout(() => {
+                    setShowVerification(false);
+                    // Reset form
+                    setFormData({
+                        fullName: '',
+                        email: '',
+                        mobileNumber: '',
+                        title: '',
+                        description: '',
+                        content: '',
+                        categories: [],
+                        tags: '',
+                        metaTitle: '',
+                        metaDescription: '',
+                        formName: 'write your blog'
+                    });
+                    setVerificationCode('');
+                    setIsVerified(false);
+                }, 3000);
+            } else {
+                setVerificationError(result.message || 'Verification failed');
+            }
+        } catch (err) {
+            setVerificationError('Network error. Please try again.');
+        } finally {
+            setVerificationLoading(false);
+        }
+    };
+
+    const handleResendCode = async () => {
+        setVerificationLoading(true);
+        setVerificationMessage('');
+        setVerificationError('');
+
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/blog-submissions/resend-verification`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ submissionId })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                setVerificationMessage('New verification code sent to your email!');
+            } else {
+                setVerificationError(result.message || 'Failed to resend code');
+            }
+        } catch (err) {
+            setVerificationError('Network error. Please try again.');
+        } finally {
+            setVerificationLoading(false);
         }
     };
 
@@ -309,31 +340,32 @@ const WriteYourBlog = () => {
                             </div>
                         </div>
 
-                        {/* Categories Section */}
+                        {/* Categories Section - Fixed */}
                         <div className="space-y-6">
                             <h3 className="text-xl font-semibold text-white border-b border-white/20 pb-2">
                                 Categories & Tags
                             </h3>
-                            <div className="grid md:grid-cols-2 gap-6">
+                            <div className="space-y-6">
+                                {/* Categories as checkboxes */}
                                 <div>
-                                    <label className="block mb-2 text-sm font-medium text-white">Main Category *</label>
-                                    <select
-                                        name="mainCategory"
-                                        required
-                                        value={formData.mainCategory}
-                                        onChange={handleChange}
-                                        className="w-full p-4 rounded-xl bg-white/20 border border-white/30 text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-all"
-                                        disabled={categoriesLoading}
-                                    >
-                                        <option value="">Select a main category</option>
-                                        {categories.map((category) => (
-                                            <option key={category._id} value={category._id}>
-                                                {category.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    {categoriesLoading && (
-                                        <p className="text-sm text-gray-300 mt-1">Loading categories...</p>
+                                    <label className="block mb-2 text-sm font-medium text-white">Categories</label>
+                                    {categoriesLoading ? (
+                                        <p className="text-sm text-gray-300">Loading categories...</p>
+                                    ) : (
+                                        <div className="grid md:grid-cols-3 gap-3">
+                                            {categories.map((category) => (
+                                                <label key={category._id} className="flex items-center space-x-2 text-white">
+                                                    <input
+                                                        type="checkbox"
+                                                        value={category.name}
+                                                        checked={formData.categories.includes(category.name)}
+                                                        onChange={handleCategoryChange}
+                                                        className="rounded border-gray-300"
+                                                    />
+                                                    <span className="text-sm">{category.name}</span>
+                                                </label>
+                                            ))}
+                                        </div>
                                     )}
                                 </div>
 
@@ -394,6 +426,96 @@ const WriteYourBlog = () => {
                     </form>
                 </div>
             </div>
+
+            {/* Email Verification Modal */}
+            {showVerification && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+                    <div className="bg-white rounded-2xl shadow-2xl p-6 md:p-8 max-w-md w-full mx-4">
+                        <div className="text-center mb-6">
+                            {isVerified ? (
+                                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                </div>
+                            ) : (
+                                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                    </svg>
+                                </div>
+                            )}
+                            <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                                {isVerified ? 'Email Verified!' : 'Verify Your Email'}
+                            </h3>
+                            <p className="text-gray-600">
+                                {isVerified
+                                    ? 'Your blog submission is now ready for review.'
+                                    : `Enter the 6-digit code sent to ${formData.email}`
+                                }
+                            </p>
+                        </div>
+
+                        {verificationMessage && (
+                            <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded-lg text-sm">
+                                {verificationMessage}
+                            </div>
+                        )}
+
+                        {verificationError && (
+                            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm">
+                                {verificationError}
+                            </div>
+                        )}
+
+                        {!isVerified && (
+                            <form onSubmit={handleVerifyEmail} className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Verification Code
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={verificationCode}
+                                        onChange={(e) => setVerificationCode(e.target.value)}
+                                        placeholder="Enter 6-digit code"
+                                        maxLength="6"
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-xl text-center text-2xl font-mono tracking-widest focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        required
+                                    />
+                                </div>
+
+                                <div className="flex gap-3">
+                                    <button
+                                        type="submit"
+                                        disabled={verificationLoading || verificationCode.length !== 6}
+                                        className="flex-1 bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {verificationLoading ? 'Verifying...' : 'Verify'}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={handleResendCode}
+                                        disabled={verificationLoading}
+                                        className="px-4 py-3 border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50"
+                                    >
+                                        Resend
+                                    </button>
+                                </div>
+                            </form>
+                        )}
+
+                        {!isVerified && (
+                            <button
+                                onClick={() => setShowVerification(false)}
+                                className="mt-4 w-full text-gray-500 hover:text-gray-700 text-sm"
+                            >
+                                Close
+                            </button>
+                        )}
+                    </div>
+                </div>
+            )}
         </section>
     );
 };
