@@ -6,6 +6,7 @@ class VerificationStore {
         this.codes = new Map();
     }
 
+
     set(email, data) {
         this.codes.set(email, data);
     }
