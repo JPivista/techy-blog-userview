@@ -677,7 +677,7 @@ const WriteYourBlog = () => {
                                             Your verification code is no longer valid
                                         </p>
                                         <p className="text-xs text-red-500">
-                                            Click "Resend OTP" below to get a new 15-minute code
+                                            Click &ldquo;Resend OTP&rdquo; below to get a new 15-minute code
                                         </p>
                                     </div>
                                 )}
