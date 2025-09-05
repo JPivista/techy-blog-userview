@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { getBlogImageUrl } from '../../utils/imageUtils';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,7 +10,7 @@ export async function generateMetadata({ params }) {
     const { category } = params;
 
     // Configure your full domain here
-    const fullDomain = process.env.NEXT_PUBLIC_FULL_DOMAIN || 'https://mydomain.com';
+    const fullDomain = process.env.NEXT_PUBLIC_FULL_DOMAIN || 'https://techy-blog.com';
 
     try {
         // Fetch category metadata from backend
@@ -161,15 +162,15 @@ export default async function CategoryPage({ params }) {
                                 key={blog._id}
                                 className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition flex flex-col h-full"
                             >
-                                {blog.image ? (
+                                {getBlogImageUrl(blog) ? (
                                     <img
-                                        src={blog.image}
+                                        src={getBlogImageUrl(blog)}
                                         alt={blog.title}
                                         className="w-full h-48 object-cover"
                                     />
                                 ) : (
                                     <div className="w-full h-48 flex items-center justify-center text-3xl font-bold text-white bg-gradient-to-r from-purple-600 via-pink-500 to-yellow-400 shadow-lg">
-                                        techyblog
+                                        {blog.categoryIds?.[0]?.name || 'TechyBlog'}
                                     </div>
                                 )}
 

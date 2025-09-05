@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { getBlogImageUrl, getBlogBannerUrl } from '../../../utils/imageUtils';
 
 export async function generateMetadata({ params }) {
     const { category, slug } = params;
@@ -163,10 +164,10 @@ export default async function BlogDetailsPage({ params }) {
                 </nav>
 
                 {/* Blog Banner Image */}
-                {blog.banner && (
+                {getBlogBannerUrl(blog) && (
                     <div className="mb-6">
                         <img
-                            src={`${process.env.NEXT_PUBLIC_API_BASE_URL}${blog.banner}`}
+                            src={getBlogBannerUrl(blog)}
                             alt={blog.title}
                             className="w-full h-64 md:h-96 object-cover rounded-lg shadow-lg"
                         />
@@ -238,15 +239,15 @@ export default async function BlogDetailsPage({ params }) {
                             key={related._id}
                             className="bg-white rounded-md shadow-sm hover:shadow-md transition"
                         >
-                            {related.banner ? (
+                            {getBlogImageUrl(related) ? (
                                 <img
-                                    src={`${process.env.NEXT_PUBLIC_API_BASE_URL}${related.banner}`}
+                                    src={getBlogImageUrl(related)}
                                     alt={related.title}
                                     className="w-full h-32 object-cover rounded-t-md"
                                 />
                             ) : (
                                 <div className="w-full h-32 flex items-center justify-center text-lg font-bold text-white bg-gradient-to-r from-purple-600 via-pink-500 to-yellow-400">
-                                    techyblog
+                                    {related.categoryIds?.[0]?.name || 'TechyBlog'}
                                 </div>
                             )}
                             <div className="p-3">
