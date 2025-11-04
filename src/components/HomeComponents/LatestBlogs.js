@@ -14,15 +14,70 @@ const LatestBlogs = () => {
     const [error, setError] = useState(null);
     const swiperRef = useRef(null);
 
+    const fetchWordPressTags = async (tagIds) => {
+        if (!tagIds || tagIds.length === 0) return [];
+        try {
+            const ids = tagIds.join(',');
+            const response = await fetch(
+                `https://docs.techy-blog.com/wp-json/wp/v2/tags?include=${ids}`,
+                { cache: 'no-store' }
+            );
+            if (!response.ok) return [];
+            const tags = await response.json();
+            // Return array of tag names
+            return tags.map(tag => tag.name);
+        } catch (error) {
+            console.error('Error fetching WordPress tags:', error);
+            return [];
+        }
+    };
+
     useEffect(() => {
         const fetchBlogs = async () => {
             try {
-                const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/blogs`);
+                const response = await fetch(
+                    'https://docs.techy-blog.com/wp-json/wp/v2/posts?per_page=10&status=publish&_embed=true',
+                    { cache: 'no-store' }
+                );
                 if (!response.ok) throw new Error('Failed to fetch blogs');
 
-                const data = await response.json();
-                const publishedBlogs = data.blogs?.filter(blog => blog.status === "published").slice(0, 10) || [];
-                setBlogs(publishedBlogs);
+                const wpPosts = await response.json();
+
+                // Transform WordPress posts to match expected blog structure
+                const transformedBlogs = await Promise.all(wpPosts.map(async (wpPost) => {
+                    const featuredImage = wpPost._embedded?.['wp:featuredmedia']?.[0]?.source_url || null;
+                    const wpCategories = wpPost._embedded?.['wp:term']?.[0] || [];
+                    
+                    // Fetch tags to get tag names
+                    const wpTagNames = await fetchWordPressTags(wpPost.tags || []);
+                    
+                    // Fetch post_author_name from ACF or meta fields, fallback to embedded author
+                    const postAuthorName = wpPost.acf?.post_author_name || 
+                                         wpPost.meta?.post_author_name || 
+                                         wpPost._embedded?.author?.[0]?.name || 
+                                         'Unknown Author';
+
+                    return {
+                        _id: wpPost.id.toString(),
+                        title: wpPost.title?.rendered || '',
+                        description: wpPost.content?.rendered || '',
+                        slug: wpPost.slug,
+                        status: wpPost.status,
+                        publishedDate: wpPost.date,
+                        updatedAt: wpPost.modified,
+                        authorName: postAuthorName,
+                        banner: featuredImage,
+                        thumbnail: featuredImage,
+                        categoryIds: wpCategories.map(cat => ({
+                            _id: cat.id.toString(),
+                            name: cat.name,
+                            slug: cat.slug
+                        })),
+                        tags: wpTagNames || []
+                    };
+                }));
+
+                setBlogs(transformedBlogs);
             } catch (err) {
                 setError(err.message);
             } finally {
@@ -129,7 +184,7 @@ const LatestBlogs = () => {
                                                 </span>
                                             </div>
                                             <Link
-                                                href={`/${blog.categoryIds?.[0]?.name?.toLowerCase() || 'blog'}/${blog.slug}`}
+                                                href={`/${blog.categoryIds?.[0]?.slug || 'blog'}/${blog.slug}`}
                                                 className="text-sm font-semibold text-purple-600 hover:text-purple-800 group-hover:scale-105 transition-all duration-300 inline-block"
                                             >
                                                 Read More →

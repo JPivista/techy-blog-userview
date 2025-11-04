@@ -4,6 +4,7 @@ import HeroSection from "./HeroSection";
 import BrowseByCategory from "./BrowseByCategory";
 import WhyTechyBlog from "./WhyTechyBlog";
 import LatestBlogs from "./LatestBlogs";
+import AllBlogs from "./AllBlogs";
 import WhatWeDo from "./WhatWeDo";
 import WriteBlogCTA from "./WriteBlogCTA";
 import BlogPopup from "./BlogPopup";
@@ -47,32 +48,31 @@ export default function Home({ blogs }) {
         'Sports': <FaFutbol />
     };
 
-    // Fetch categories from backend
+    // Fetch categories from WordPress
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/categories`);
+                const response = await fetch('https://docs.techy-blog.com/wp-json/wp/v2/categories?per_page=100');
                 if (response.ok) {
-                    const result = await response.json();
+                    const wpCategories = await response.json();
 
-                    if (result.success && result.data) {
-                        // Map API categories to component format with icons
-                        const mappedCategories = result.data.map(category => ({
+                    // Filter out uncategorized and transform to component format
+                    const mappedCategories = wpCategories
+                        .filter(cat => cat.slug !== 'uncategorized' && cat.name !== 'Uncategorized')
+                        .map(category => ({
                             name: category.name,
-                            href: `/${category.slug || category.name.toLowerCase().replace(/\s+/g, "-")}`,
+                            href: `/${category.slug}`,
                             icon: categoryIcons[category.name] || <FaLaptopCode />, // Default icon
-                            _id: category._id,
+                            _id: category.id.toString(),
                             description: category.description
                         }));
 
-                        setCategories(mappedCategories);
-                        // console.log('📋 Home categories loaded:', mappedCategories);
-                    }
+                    setCategories(mappedCategories);
                 } else {
-                    console.error('Failed to fetch categories for home page');
+                    console.error('Failed to fetch categories from WordPress');
                 }
             } catch (error) {
-                console.error('Error fetching categories for home page:', error);
+                console.error('Error fetching categories from WordPress:', error);
             } finally {
                 setCategoriesLoading(false);
             }
@@ -86,6 +86,7 @@ export default function Home({ blogs }) {
             {/* <BlogPopup /> */}
             <HeroSection />
             <LatestBlogs />
+            {/* <AllBlogs /> */}
             <WhyTechyBlog />
             <WhatWeDo />
             <WriteBlogCTA />

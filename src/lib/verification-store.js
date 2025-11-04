@@ -26,7 +26,8 @@ class VerificationStore {
     cleanup() {
         const now = Date.now();
         for (const [email, data] of this.codes.entries()) {
-            if (now - data.timestamp > 10 * 60 * 1000) { // 10 minutes
+            // Clean up entries older than 20 minutes (OTP expires in 15 minutes)
+            if (now - data.timestamp > 20 * 60 * 1000) {
                 this.codes.delete(email);
             }
         }
@@ -34,6 +35,10 @@ class VerificationStore {
 
     size() {
         return this.codes.size;
+    }
+
+    entries() {
+        return this.codes.entries();
     }
 }
 

@@ -12,26 +12,30 @@ const Header = () => {
     const [categoriesLoading, setCategoriesLoading] = useState(true);
     const pathname = usePathname();
 
-    // Fetch categories from backend
+    // Fetch categories from WordPress API
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/categories`);
+                const response = await fetch('https://docs.techy-blog.com/wp-json/wp/v2/categories?per_page=100');
                 if (response.ok) {
-                    const result = await response.json();
+                    const wpCategories = await response.json();
 
-                    // Handle the response structure
-                    if (result.success && result.data) {
-                        setCategories(result.data);
-                        // console.log('📋 Header categories loaded:', result.data);
-                    } else {
-                        console.error('Invalid categories response structure');
-                    }
+                    // Transform WordPress categories to match expected structure
+                    const transformedCategories = wpCategories
+                        .filter(cat => cat.slug !== 'uncategorized' && cat.name !== 'Uncategorized')
+                        .map(cat => ({
+                            _id: cat.id.toString(),
+                            name: cat.name,
+                            slug: cat.slug
+                        }));
+
+                    setCategories(transformedCategories);
+                    // console.log('📋 Header categories loaded from WordPress:', transformedCategories);
                 } else {
-                    console.error('Failed to fetch categories for header');
+                    console.error('Failed to fetch categories from WordPress');
                 }
             } catch (error) {
-                console.error('Error fetching categories for header:', error);
+                console.error('Error fetching categories from WordPress:', error);
             } finally {
                 setCategoriesLoading(false);
             }

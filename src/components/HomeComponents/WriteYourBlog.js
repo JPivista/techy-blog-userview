@@ -29,6 +29,7 @@ const WriteYourBlog = () => {
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(false);
     const [categoriesLoading, setCategoriesLoading] = useState(true);
+    const [imageLink, setImageLink] = useState('');
 
     // Verification Modal States
     const [showVerification, setShowVerification] = useState(false);
@@ -44,31 +45,30 @@ const WriteYourBlog = () => {
     const [isOtpValid, setIsOtpValid] = useState(false);
     const [canResendOtp, setCanResendOtp] = useState(true);
 
-    // Fetch categories from backend
+    // Fetch categories from WordPress API
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                // Fixed: Direct call to backend without auth
-                const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/categories`, {
-                    headers: {
-                        'Accept': 'application/json',
-                    }
-                });
+                const response = await fetch('https://docs.techy-blog.com/wp-json/wp/v2/categories?per_page=100');
                 if (response.ok) {
-                    const result = await response.json();
+                    const wpCategories = await response.json();
 
-                    // Handle the response structure
-                    if (result.success && result.data) {
-                        setCategories(result.data);
-                        console.log('📋 Categories loaded:', result.data);
-                    } else {
-                        console.error('Invalid categories response structure');
-                    }
+                    // Transform WordPress categories to match expected structure
+                    const transformedCategories = wpCategories
+                        .filter(cat => cat.slug !== 'uncategorized' && cat.name !== 'Uncategorized')
+                        .map(cat => ({
+                            _id: cat.id.toString(),
+                            name: cat.name,
+                            slug: cat.slug
+                        }));
+
+                    setCategories(transformedCategories);
+                    // console.log('📋 Categories loaded from WordPress:', transformedCategories);
                 } else {
-                    console.error('Failed to fetch categories');
+                    console.error('Failed to fetch categories from WordPress');
                 }
             } catch (error) {
-                console.error('Error fetching categories:', error);
+                console.error('Error fetching categories from WordPress:', error);
             } finally {
                 setCategoriesLoading(false);
             }
@@ -138,6 +138,7 @@ const WriteYourBlog = () => {
 
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
+
 
     // Handle category selection (checkboxes)
     const handleCategoryChange = (e) => {
@@ -210,7 +211,7 @@ const WriteYourBlog = () => {
         setLoading(true);
 
         try {
-            // Prepare data for backend submission (direct integration)
+            // First, submit to blog-submissions API to trigger OTP email
             const submissionData = {
                 fullName: formData.fullName,
                 email: formData.email,
@@ -218,17 +219,17 @@ const WriteYourBlog = () => {
                 title: formData.title,
                 description: formData.description,
                 content: formData.content,
-                categories: formData.categories, // Array of category names
-                tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag), // Convert to array
+                categories: formData.categories,
+                tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
                 metaTitle: formData.metaTitle,
                 metaDescription: formData.metaDescription,
                 formName: formData.formName
             };
 
-            console.log('📤 Submitting blog data directly to backend:', submissionData);
+            console.log('📤 Submitting blog data to trigger email verification...');
 
-            // Submit directly to backend API
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/blog-submissions/create-blog`, {
+            // Submit to blog-submissions API to get submissionId and trigger OTP
+            const response = await fetch('/api/blog-submissions/submitBlog', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -239,23 +240,85 @@ const WriteYourBlog = () => {
             const result = await response.json();
             setLoading(false);
 
-            if (result.success) {
-                console.log('✅ Blog submitted successfully:', result);
+            if (result.success && result.data && result.data.submissionId) {
+                console.log('✅ OTP sent to email. Submission ID:', result.data.submissionId);
 
-                // Show verification modal
+                // Store submission ID and show verification modal
                 setSubmissionId(result.data.submissionId);
                 setShowVerification(true);
-                setVerificationMessage('Blog submitted! Check your email for the verification code.');
-                // Start 15-minute OTP timer
-                startOtpTimer();
+                startOtpTimer(); // Start 15-minute timer
+                setVerificationMessage('Verification code sent to your email! Please check your inbox.');
             } else {
-                alert(`Submission failed: ${result.message || 'Unknown error'}`);
+                alert(`Failed to send verification code: ${result.message || 'Unknown error'}`);
                 console.error('Submission error:', result);
             }
         } catch (err) {
             setLoading(false);
             alert('Server error! Please try again.');
             console.error('Error details:', err);
+        }
+    };
+
+    // Function to submit to Contact Form 7 and WordPress after verification
+    const submitToBackends = async () => {
+        try {
+            // Prepare JSON data for submission
+            const submissionData = {
+                fullName: formData.fullName,
+                email: formData.email,
+                mobileNumber: formData.mobileNumber,
+                title: formData.title,
+                description: formData.description,
+                content: formData.content,
+                categories: formData.categories,
+                tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
+                metaTitle: formData.metaTitle,
+                metaDescription: formData.metaDescription,
+                imageLink: imageLink.trim() || '' // Add image link if provided
+            };
+
+            console.log('📤 Submitting blog data to WordPress with image_link:', imageLink ? 'Yes' : 'No');
+
+            // Submit to Contact Form 7 API
+            try {
+                const formDataCF7 = new FormData();
+                formDataCF7.append('fullName', formData.fullName);
+                formDataCF7.append('email', formData.email);
+                formDataCF7.append('mobileNumber', formData.mobileNumber);
+
+                const cf7Response = await fetch('https://docs.techy-blog.com/wp-json/contact-form-7/v1/contact-forms/19/feedback', {
+                    method: 'POST',
+                    body: formDataCF7
+                });
+
+                const cf7Result = await cf7Response.json();
+                console.log('📧 Contact Form 7 submission result:', cf7Result);
+            } catch (cf7Error) {
+                console.error('⚠️ Contact Form 7 submission error:', cf7Error);
+                // Continue with WordPress submission even if CF7 fails
+            }
+
+            // Submit to WordPress via Next.js API route
+            const response = await fetch('/api/wordpress/create-post', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(submissionData)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                console.log('✅ Blog submitted successfully to WordPress:', result);
+                return { success: true, data: result.data };
+            } else {
+                console.error('WordPress submission error:', result);
+                return { success: false, message: result.message || 'Unknown error' };
+            }
+        } catch (err) {
+            console.error('Backend submission error:', err);
+            return { success: false, message: 'Server error during submission' };
         }
     };
 
@@ -266,7 +329,7 @@ const WriteYourBlog = () => {
         setVerificationError('');
 
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/blog-submissions/verify-email`, {
+            const response = await fetch('/api/blog-submissions/verify-email', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -281,37 +344,22 @@ const WriteYourBlog = () => {
 
             if (result.success) {
                 setIsVerified(true);
-                setVerificationMessage('Email verified successfully! Your blog is now submitted for review.');
+                setVerificationMessage('Email verified successfully! Submitting your blog...');
 
                 // Stop OTP timer since verification is successful
                 setIsOtpValid(false);
                 setOtpTimer(0);
                 setCanResendOtp(true);
 
-                // Auto close after 3 seconds
-                setTimeout(() => {
-                    setShowVerification(false);
-                    // Reset form
-                    setFormData({
-                        fullName: '',
-                        email: '',
-                        mobileNumber: '',
-                        title: '',
-                        description: '',
-                        content: '',
-                        categories: [],
-                        tags: '',
-                        metaTitle: '',
-                        metaDescription: '',
-                        formName: 'write your blog'
-                    });
-                    setVerificationCode('');
-                    setIsVerified(false);
-                    // Reset timer states when closing verification modal
-                    setIsOtpValid(false);
-                    setOtpTimer(0);
-                    setCanResendOtp(true);
-                }, 3000);
+                // Now submit to Contact Form 7 and WordPress after successful verification
+                const backendResult = await submitToBackends();
+
+                if (backendResult.success) {
+                    setVerificationMessage('🎉 Thank you! Your email has been verified and your blog has been submitted successfully! A thank you email has been sent to your inbox. Your post has been submitted for review and will be published after approval.' + (backendResult.data?.postId ? `\n\nPost ID: ${backendResult.data.postId}` : ''));
+                } else {
+                    setVerificationError(`Email verified, but submission failed: ${backendResult.message || 'Unknown error'}`);
+                    setIsVerified(false); // Allow retry
+                }
             } else {
                 setVerificationError(result.message || 'Verification failed');
             }
@@ -322,13 +370,42 @@ const WriteYourBlog = () => {
         }
     };
 
+    // Handle closing verification modal and resetting form
+    const handleCloseVerification = () => {
+        setShowVerification(false);
+        // Reset form
+        setFormData({
+            fullName: '',
+            email: '',
+            mobileNumber: '',
+            title: '',
+            description: '',
+            content: '',
+            categories: [],
+            tags: '',
+            metaTitle: '',
+            metaDescription: '',
+            formName: 'write your blog'
+        });
+        setImageLink('');
+        setVerificationCode('');
+        setIsVerified(false);
+        setVerificationMessage('');
+        setVerificationError('');
+        // Reset timer states
+        setIsOtpValid(false);
+        setOtpTimer(0);
+        setCanResendOtp(true);
+        setSubmissionId('');
+    };
+
     const handleResendCode = async () => {
         setVerificationLoading(true);
         setVerificationMessage('');
         setVerificationError('');
 
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/blog-submissions/resend-verification`, {
+            const response = await fetch('/api/blog-submissions/resend-verification', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -453,6 +530,32 @@ const WriteYourBlog = () => {
                                 </div>
 
                                 <div>
+                                    <label className="block mb-2 text-sm font-medium text-white">Image Link</label>
+                                    <input
+                                        type="url"
+                                        value={imageLink}
+                                        onChange={(e) => setImageLink(e.target.value)}
+                                        placeholder="https://example.com/image.jpg"
+                                        className="w-full p-4 rounded-xl bg-white/20 border border-white/30 text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-all"
+                                    />
+                                    <p className="text-sm text-gray-300 mt-2">
+                                        Enter the URL of the image you want to use as the banner image
+                                    </p>
+                                    {imageLink && (
+                                        <div className="mt-4">
+                                            <img
+                                                src={imageLink}
+                                                alt="Banner preview"
+                                                className="max-w-full h-auto rounded-lg border border-white/30"
+                                                onError={(e) => {
+                                                    e.target.style.display = 'none';
+                                                }}
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div>
                                     <label className="block mb-2 text-sm font-medium text-white">Blog Content *</label>
                                     <textarea
                                         name="content"
@@ -463,9 +566,6 @@ const WriteYourBlog = () => {
                                         placeholder="Write your full blog content here..."
                                         className="w-full p-4 rounded-xl bg-white/20 border border-white/30 text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-all resize-none"
                                     ></textarea>
-                                    <p className="text-sm text-gray-300 mt-2">
-                                        Note: Only text content is accepted. Images will not be processed.
-                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -592,7 +692,7 @@ const WriteYourBlog = () => {
                             </h3>
                             <p className="text-gray-600">
                                 {isVerified
-                                    ? 'Your blog submission is now ready for review.'
+                                    ? 'Your blog submission has been received and is ready for review!'
                                     : `Enter the 6-digit code sent to ${formData.email}`
                                 }
                             </p>
@@ -614,12 +714,12 @@ const WriteYourBlog = () => {
                         )}
 
                         {verificationMessage && (
-                            <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded-lg text-sm">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                                    {verificationMessage}
+                            <div className={`mb-4 p-4 ${isVerified ? 'bg-green-50 border-2 border-green-400' : 'bg-green-100 border border-green-400'} text-green-700 rounded-lg text-sm`}>
+                                <div className="flex items-start gap-2">
+                                    <div className={`w-2 h-2 bg-green-500 rounded-full mt-1.5 flex-shrink-0 ${isVerified ? 'animate-pulse' : ''}`}></div>
+                                    <div className="flex-1 whitespace-pre-line">{verificationMessage}</div>
                                 </div>
-                                {verificationMessage.includes('sent') && isOtpValid && (
+                                {verificationMessage.includes('sent') && isOtpValid && !isVerified && (
                                     <div className="mt-2 text-xs text-green-600">
                                         Your OTP is valid for 15 minutes. Timer started!
                                     </div>
@@ -716,9 +816,18 @@ const WriteYourBlog = () => {
                             </form>
                         )}
 
+                        {isVerified && (
+                            <button
+                                onClick={handleCloseVerification}
+                                className="mt-6 w-full bg-gradient-to-r from-purple-600 via-pink-500 to-yellow-400 text-white py-3 rounded-xl font-semibold shadow-lg hover:scale-105 transition-transform"
+                            >
+                                Close
+                            </button>
+                        )}
+
                         {!isVerified && (
                             <button
-                                onClick={() => setShowVerification(false)}
+                                onClick={handleCloseVerification}
                                 className="mt-4 w-full text-gray-500 hover:text-gray-700 text-sm"
                             >
                                 Close

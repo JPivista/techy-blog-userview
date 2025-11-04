@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import verificationStore from '@/lib/verification-store';
 
 export async function POST(req) {
     try {
@@ -15,13 +16,49 @@ export async function POST(req) {
             tags,
             metaTitle,
             metaDescription,
-            formName,
-            emailVerified,
-            verificationTimestamp
+            formName
         } = await req.json();
 
+        // Generate 6-digit OTP
+        const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+        // Generate submission ID (using timestamp + email hash)
+        const submissionId = `${Date.now()}-${email.split('@')[0]}`;
+
+        // Store submission data with OTP in verification store
+        verificationStore.set(email, {
+            code: otpCode,
+            timestamp: Date.now(),
+            verified: false,
+            submissionId: submissionId,
+            submissionData: {
+                fullName,
+                email,
+                mobileNumber,
+                title,
+                description,
+                content,
+                categories,
+                tags,
+                metaTitle,
+                metaDescription,
+                formName
+            }
+        });
+
+        console.log(`📧 Generated OTP ${otpCode} for ${email}, Submission ID: ${submissionId}`);
+
+        // Send OTP email to user
         const brevoAPI = 'https://api.brevo.com/v3/smtp/email';
         const API_KEY = process.env.BREVO_API_KEY;
+
+        if (!API_KEY) {
+            console.error('BREVO_API_KEY not configured');
+            return NextResponse.json({
+                success: false,
+                message: 'Email service not configured'
+            }, { status: 500 });
+        }
 
         const headers = {
             accept: 'application/json',
@@ -31,73 +68,70 @@ export async function POST(req) {
 
         const sender = { name: 'Techy Blog', email: 'noreply@yourdomain.com' };
 
-        const adminMail = {
+        // OTP Email to user
+        const otpEmail = {
             sender,
-            to: [
-                { email: 'jp@ivistasolutions.com' },
-                { email: 'mvivekraz@gmail.com' },
-            ],
-            subject: `${emailVerified ? '✅ Verified' : '❓ Unverified'} Blog Submission - Write Your Blog`,
+            to: [{ email }],
+            subject: 'Verify Your Email - Techy Blog Submission',
             htmlContent: `
-                <h2>New Blog Submission ${emailVerified ? '(Email Verified ✅)' : '(Email Not Verified ❓)'}</h2>
-                <p><strong>Form Type:</strong> ${formName}</p>
-                
-                ${emailVerified ? `
-                <div style="background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 5px; padding: 10px; margin: 10px 0;">
-                    <h4 style="color: #155724; margin: 0;">✅ Email Verified</h4>
-                    <p style="color: #155724; margin: 5px 0 0 0; font-size: 14px;">
-                        Verified at: ${verificationTimestamp ? new Date(verificationTimestamp).toLocaleString() : 'Unknown'}
-                    </p>
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #333;">Email Verification Required</h2>
+                    <p>Hi ${fullName},</p>
+                    <p>Thank you for submitting your blog to Techy Blog! Please verify your email address by entering the verification code below:</p>
+                    
+                    <div style="background-color: #f5f5f5; border: 2px dashed #333; border-radius: 8px; padding: 20px; text-align: center; margin: 20px 0;">
+                        <h1 style="color: #6366f1; font-size: 36px; letter-spacing: 8px; margin: 0;">${otpCode}</h1>
+                    </div>
+                    
+                    <p style="color: #666; font-size: 14px;">This code will expire in 15 minutes.</p>
+                    <p style="color: #666; font-size: 14px;">If you didn't submit a blog, please ignore this email.</p>
+                    
+                    <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+                    <p style="color: #999; font-size: 12px;">— Team Techy Blog</p>
                 </div>
-                ` : `
-                <div style="background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 5px; padding: 10px; margin: 10px 0;">
-                    <h4 style="color: #721c24; margin: 0;">❓ Email Not Verified</h4>
-                    <p style="color: #721c24; margin: 5px 0 0 0; font-size: 14px;">
-                        This submission was sent without email verification.
-                    </p>
-                </div>
-                `}
-                
-                <h3>Personal Information</h3>
-                <p><strong>Full Name:</strong> ${fullName}</p>
-                <p><strong>Email:</strong> ${email}</p>
-                <p><strong>Mobile Number:</strong> ${mobileNumber}</p>
-                
-                <h3>Blog Details</h3>
-                <p><strong>Title:</strong> ${title}</p>
-                <p><strong>Description:</strong> ${description}</p>
-                <p><strong>Main Category:</strong> ${mainCategory}</p>
-                <p><strong>Tags:</strong> ${tags}</p>
-                
-                <h3>SEO Information</h3>
-                <p><strong>Meta Title:</strong> ${metaTitle || 'Not provided'}</p>
-                <p><strong>Meta Description:</strong> ${metaDescription || 'Not provided'}</p>
-                
-                <h3>Blog Content</h3>
-                <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 10px 0;">
-                    ${content.replace(/\n/g, '<br>')}
-                </div>
-                
-                <p><em>This is a blog submission from the "Write Your Blog" form.</em></p>
             `,
         };
 
-        const res = await fetch(brevoAPI, {
-            method: 'POST',
-            headers,
-            body: JSON.stringify(adminMail),
+        try {
+            const otpResponse = await fetch(brevoAPI, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify(otpEmail),
+            });
+
+            const otpResult = await otpResponse.json();
+            console.log('📧 OTP email sent:', otpResponse.ok ? 'Success' : 'Failed', otpResult);
+
+            if (!otpResponse.ok) {
+                return NextResponse.json({
+                    success: false,
+                    message: 'Failed to send verification email',
+                    error: otpResult
+                }, { status: 500 });
+            }
+        } catch (emailError) {
+            console.error('Error sending OTP email:', emailError);
+            return NextResponse.json({
+                success: false,
+                message: 'Error sending verification email',
+                error: emailError.message
+            }, { status: 500 });
+        }
+
+        return NextResponse.json({
+            success: true,
+            message: 'Verification code sent to your email',
+            data: {
+                submissionId: submissionId,
+                email: email
+            }
         });
 
-        const json = await res.json();
-        console.log('Blog submission email response:', json);
-
-        if (res.ok) {
-            return NextResponse.json({ success: true });
-        } else {
-            return NextResponse.json({ success: false, error: json }, { status: 500 });
-        }
     } catch (error) {
         console.error('Blog submission API error:', error);
-        return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+        return NextResponse.json({
+            success: false,
+            message: error.message || 'Internal server error'
+        }, { status: 500 });
     }
 } 
