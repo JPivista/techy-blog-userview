@@ -21,10 +21,29 @@ const ContactForm = () => {
         setLoading(true);
 
         // Debug: Log the data being sent
-        console.log('📤 Data being sent to APIs:', formData);
+        console.log('📤 Data being sent:', formData);
 
         try {
-            // Send to local API (existing functionality)
+            // Submit to Contact Form 7 API
+            try {
+                const formDataCF7 = new FormData();
+                formDataCF7.append('name', formData.name);
+                formDataCF7.append('email', formData.email);
+                formDataCF7.append('message', formData.message);
+
+                const cf7Response = await fetch('https://docs.techy-blog.com/wp-json/contact-form-7/v1/contact-forms/55/feedback', {
+                    method: 'POST',
+                    body: formDataCF7
+                });
+
+                const cf7Result = await cf7Response.json();
+                console.log('📧 Contact Form 7 submission result:', cf7Result);
+            } catch (cf7Error) {
+                console.error('⚠️ Contact Form 7 submission error:', cf7Error);
+                // Continue with email sending even if CF7 fails
+            }
+
+            // Send to local API (email sending)
             const localRes = await fetch('/api/sendMail', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -32,47 +51,13 @@ const ContactForm = () => {
             });
 
             const localResult = await localRes.json();
-
-            // Send to backend API
-            let backendSuccess = false;
-            let backendResult = null;
-
-            try {
-                console.log('📤 Sending to backend API:', JSON.stringify(formData));
-                const backendRes = await fetch('http://localhost:7010/api/contacts/createContact', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(formData),
-                });
-
-                backendResult = await backendRes.json();
-                backendSuccess = backendRes.ok;
-
-                if (!backendRes.ok) {
-                    console.error('Backend API Error:', backendRes.status, backendRes.statusText);
-                    console.error('Backend Response:', backendResult);
-                } else {
-                    console.log('✅ Backend received data successfully:', backendResult);
-                }
-            } catch (backendError) {
-                console.error('Backend API Connection Error:', backendError);
-                console.log('Please check if your backend server is running on http://localhost:7010');
-            }
-
             setLoading(false);
 
             // Check if local API was successful (email sending)
             if (localResult.success) {
                 setSubmitted(true);
                 setFormData({ name: '', email: '', message: '', formName: 'contact form' });
-
-                if (backendSuccess) {
-                    console.log('✅ Data sent successfully to both APIs');
-                    console.log('Backend response:', backendResult);
-                } else {
-                    console.log('⚠️ Email sent successfully, but backend storage failed');
-                    console.log('Backend error:', backendResult);
-                }
+                console.log('✅ Email sent successfully');
             } else {
                 alert('Something went wrong. Try again.');
                 console.log('Local API error:', localResult.error);
