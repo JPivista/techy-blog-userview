@@ -3,9 +3,20 @@ import verificationStore from '@/lib/verification-store';
 
 export async function POST(req) {
     try {
-        const { submissionId, verificationCode } = await req.json();
+        const body = await req.json();
+        const { submissionId, verificationCode } = body;
+
+        console.log('📧 Verification request received:', {
+            submissionId: submissionId || 'MISSING',
+            verificationCode: verificationCode ? '***' : 'MISSING',
+            storeSize: verificationStore.size()
+        });
 
         if (!submissionId || !verificationCode) {
+            console.error('❌ Missing required fields:', {
+                hasSubmissionId: !!submissionId,
+                hasVerificationCode: !!verificationCode
+            });
             return NextResponse.json({
                 success: false,
                 message: 'Submission ID and verification code are required'
@@ -17,18 +28,28 @@ export async function POST(req) {
         let foundEmail = null;
         let foundData = null;
 
+        console.log('🔍 Searching for submissionId:', submissionId);
         for (const [email, data] of verificationStore.entries()) {
+            console.log(`  Checking email: ${email}, submissionId: ${data.submissionId}`);
             if (data.submissionId === submissionId) {
                 foundEmail = email;
                 foundData = data;
+                console.log('✅ Found submission:', { email, submissionId: data.submissionId });
                 break;
             }
         }
 
         if (!foundData) {
+            console.error('❌ Submission not found in store:', {
+                requestedSubmissionId: submissionId,
+                storeEntries: Array.from(verificationStore.entries()).map(([email, data]) => ({
+                    email,
+                    submissionId: data.submissionId
+                }))
+            });
             return NextResponse.json({
                 success: false,
-                message: 'Invalid submission ID or code has expired'
+                message: 'Invalid submission ID or code has expired. The submission may have expired or the server was restarted. Please submit your blog again to get a new verification code.'
             }, { status: 400 });
         }
 
@@ -37,9 +58,16 @@ export async function POST(req) {
         const codeAge = now - foundData.timestamp;
         const EXPIRY_TIME = 15 * 60 * 1000; // 15 minutes
 
+        console.log('⏱️ Code age check:', {
+            codeAge: `${Math.floor(codeAge / 1000)}s`,
+            expiryTime: `${EXPIRY_TIME / 1000 / 60} minutes`,
+            isExpired: codeAge > EXPIRY_TIME
+        });
+
         if (codeAge > EXPIRY_TIME) {
             // Clean up expired code
             verificationStore.delete(foundEmail);
+            console.error('❌ Code expired');
             return NextResponse.json({
                 success: false,
                 message: 'Verification code has expired. Please request a new one.'
@@ -48,6 +76,7 @@ export async function POST(req) {
 
         // Check if already verified
         if (foundData.verified) {
+            console.error('❌ Already verified');
             return NextResponse.json({
                 success: false,
                 message: 'This submission has already been verified'
@@ -55,10 +84,17 @@ export async function POST(req) {
         }
 
         // Verify the code
+        console.log('🔐 Verifying code:', {
+            storedCode: foundData.code,
+            providedCode: verificationCode,
+            match: foundData.code === verificationCode
+        });
+
         if (foundData.code !== verificationCode) {
+            console.error('❌ Invalid verification code');
             return NextResponse.json({
                 success: false,
-                message: 'Invalid verification code'
+                message: 'Invalid verification code. Please check and try again.'
             }, { status: 400 });
         }
 

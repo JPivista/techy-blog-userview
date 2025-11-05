@@ -328,7 +328,19 @@ const WriteYourBlog = () => {
         setVerificationMessage('');
         setVerificationError('');
 
+        // Validate inputs before sending
+        if (!submissionId || !verificationCode) {
+            setVerificationError('Please enter the verification code from your email.');
+            setVerificationLoading(false);
+            return;
+        }
+
         try {
+            console.log('📤 Verifying email:', {
+                submissionId,
+                verificationCode: verificationCode ? '***' : 'MISSING'
+            });
+
             const response = await fetch('/api/blog-submissions/verify-email', {
                 method: 'POST',
                 headers: {
@@ -336,11 +348,17 @@ const WriteYourBlog = () => {
                 },
                 body: JSON.stringify({
                     submissionId,
-                    verificationCode
+                    verificationCode: verificationCode.trim()
                 })
             });
 
             const result = await response.json();
+
+            console.log('📧 Verification response:', {
+                success: result.success,
+                message: result.message,
+                status: response.status
+            });
 
             if (result.success) {
                 setIsVerified(true);
@@ -361,10 +379,13 @@ const WriteYourBlog = () => {
                     setIsVerified(false); // Allow retry
                 }
             } else {
-                setVerificationError(result.message || 'Verification failed');
+                const errorMessage = result.message || 'Verification failed';
+                setVerificationError(errorMessage);
+                console.error('❌ Verification failed:', errorMessage);
             }
         } catch (err) {
-            setVerificationError('Network error. Please try again.');
+            console.error('❌ Network error during verification:', err);
+            setVerificationError('Network error. Please check your connection and try again.');
         } finally {
             setVerificationLoading(false);
         }

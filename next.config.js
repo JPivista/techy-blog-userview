@@ -14,7 +14,8 @@ const nextConfig = {
         domains: [
             'localhost',
             'api.techy-blog.com',
-            'www.techy-blog.com'
+            'www.techy-blog.com',
+            'techy-blog.com'
         ],
         remotePatterns: [
             {

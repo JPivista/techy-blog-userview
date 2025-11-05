@@ -15,8 +15,8 @@ export function getBlogImageUrl(blog) {
         // For development, use localhost:3000 (frontend domain)
         baseUrl = 'http://localhost:3000';
     } else {
-        // For production, use the current website domain
-        baseUrl = 'https://www.techy-blog.com';
+        // For production, use the current website domain from env or fallback
+        baseUrl = process.env.NEXT_PUBLIC_FULL_DOMAIN || 'https://techy-blog.com';
     }
 
     console.log('getBlogImageUrl - baseUrl:', baseUrl);
@@ -80,8 +80,8 @@ export function getBlogBannerUrl(blog) {
         // For development, use localhost:3000 (frontend domain)
         baseUrl = 'http://localhost:3000';
     } else {
-        // For production, use the current website domain
-        baseUrl = 'https://www.techy-blog.com';
+        // For production, use the current website domain from env or fallback
+        baseUrl = process.env.NEXT_PUBLIC_FULL_DOMAIN || 'https://techy-blog.com';
     }
 
     // Helper function to construct URL

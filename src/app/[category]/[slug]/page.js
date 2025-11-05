@@ -56,7 +56,7 @@ export async function generateMetadata({ params }) {
     const { category, slug } = params;
 
     // Configure your full domain here
-    const fullDomain = process.env.NEXT_PUBLIC_FULL_DOMAIN || 'https://mydomain.com';
+    const fullDomain = process.env.NEXT_PUBLIC_FULL_DOMAIN || 'https://techy-blog.com';
 
     try {
         // Fetch blog data from WordPress
