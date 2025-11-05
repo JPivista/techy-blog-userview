@@ -20,9 +20,6 @@ const ContactForm = () => {
         e.preventDefault();
         setLoading(true);
 
-        // Debug: Log the data being sent
-        console.log('📤 Data being sent:', formData);
-
         try {
             // Submit to Contact Form 7 API
             try {
@@ -57,10 +54,8 @@ const ContactForm = () => {
             if (localResult.success) {
                 setSubmitted(true);
                 setFormData({ name: '', email: '', message: '', formName: 'contact form' });
-                console.log('✅ Email sent successfully');
             } else {
                 alert('Something went wrong. Try again.');
-                console.log('Local API error:', localResult.error);
             }
         } catch (err) {
             setLoading(false);

@@ -6,12 +6,6 @@ export async function POST(req) {
         const body = await req.json();
         const { submissionId, verificationCode } = body;
 
-        console.log('📧 Verification request received:', {
-            submissionId: submissionId || 'MISSING',
-            verificationCode: verificationCode ? '***' : 'MISSING',
-            storeSize: verificationStore.size()
-        });
-
         if (!submissionId || !verificationCode) {
             console.error('❌ Missing required fields:', {
                 hasSubmissionId: !!submissionId,
@@ -28,13 +22,10 @@ export async function POST(req) {
         let foundEmail = null;
         let foundData = null;
 
-        console.log('🔍 Searching for submissionId:', submissionId);
         for (const [email, data] of verificationStore.entries()) {
-            console.log(`  Checking email: ${email}, submissionId: ${data.submissionId}`);
             if (data.submissionId === submissionId) {
                 foundEmail = email;
                 foundData = data;
-                console.log('✅ Found submission:', { email, submissionId: data.submissionId });
                 break;
             }
         }
@@ -58,12 +49,6 @@ export async function POST(req) {
         const codeAge = now - foundData.timestamp;
         const EXPIRY_TIME = 15 * 60 * 1000; // 15 minutes
 
-        console.log('⏱️ Code age check:', {
-            codeAge: `${Math.floor(codeAge / 1000)}s`,
-            expiryTime: `${EXPIRY_TIME / 1000 / 60} minutes`,
-            isExpired: codeAge > EXPIRY_TIME
-        });
-
         if (codeAge > EXPIRY_TIME) {
             // Clean up expired code
             verificationStore.delete(foundEmail);
@@ -84,12 +69,6 @@ export async function POST(req) {
         }
 
         // Verify the code
-        console.log('🔐 Verifying code:', {
-            storedCode: foundData.code,
-            providedCode: verificationCode,
-            match: foundData.code === verificationCode
-        });
-
         if (foundData.code !== verificationCode) {
             console.error('❌ Invalid verification code');
             return NextResponse.json({
@@ -102,8 +81,6 @@ export async function POST(req) {
         foundData.verified = true;
         foundData.verifiedAt = now;
         verificationStore.set(foundEmail, foundData);
-
-        console.log(`✅ Email verified for submission ${submissionId}`);
 
         // Send thank you email to user and acknowledgment email to admin
         const brevoAPI = 'https://api.brevo.com/v3/smtp/email';
@@ -198,7 +175,6 @@ export async function POST(req) {
                     headers,
                     body: JSON.stringify(thankYouEmail),
                 }).then(res => {
-                    console.log('📧 Thank you email sent:', res.ok ? 'Success' : 'Failed');
                     return res.json();
                 }).catch(err => {
                     console.error('Error sending thank you email:', err);
@@ -208,7 +184,6 @@ export async function POST(req) {
                     headers,
                     body: JSON.stringify(adminEmail),
                 }).then(res => {
-                    console.log('📧 Admin acknowledgment email sent:', res.ok ? 'Success' : 'Failed');
                     return res.json();
                 }).catch(err => {
                     console.error('Error sending admin email:', err);

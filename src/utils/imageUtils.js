@@ -19,9 +19,6 @@ export function getBlogImageUrl(blog) {
         baseUrl = process.env.NEXT_PUBLIC_FULL_DOMAIN || 'https://techy-blog.com';
     }
 
-    console.log('getBlogImageUrl - baseUrl:', baseUrl);
-    console.log('getBlogImageUrl - blog:', blog);
-
     // Helper function to construct URL
     const constructUrl = (imagePath) => {
         if (!imagePath) return null;
@@ -44,23 +41,19 @@ export function getBlogImageUrl(blog) {
     // Priority: banner (desktop) -> thumbnail (tablet) -> mobileBanner (mobile)
     if (blog.banner) {
         const url = constructUrl(blog.banner);
-        console.log('getBlogImageUrl - banner URL:', url);
         return url;
     }
 
     if (blog.thumbnail) {
         const url = constructUrl(blog.thumbnail);
-        console.log('getBlogImageUrl - thumbnail URL:', url);
         return url;
     }
 
     if (blog.mobileBanner) {
         const url = constructUrl(blog.mobileBanner);
-        console.log('getBlogImageUrl - mobileBanner URL:', url);
         return url;
     }
 
-    console.log('getBlogImageUrl - no images found');
     return null;
 }
 

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { getBlogImageUrl } from '../../utils/imageUtils';
 
 const BLOGS_PER_PAGE = 9;
@@ -52,15 +53,15 @@ async function fetchWordPressBlogs(categoryId, page = 1, perPage = 100) {
         const blogs = await Promise.all(wpPosts.map(async (wpPost) => {
             const featuredImage = wpPost._embedded?.['wp:featuredmedia']?.[0]?.source_url || null;
             const wpCategories = wpPost._embedded?.['wp:term']?.[0] || [];
-            
+
             // Fetch tags to get tag names
             const wpTagNames = await fetchWordPressTags(wpPost.tags || []);
-            
+
             // Fetch post_author_name from ACF or meta fields, fallback to embedded author
-            const postAuthorName = wpPost.acf?.post_author_name || 
-                                 wpPost.meta?.post_author_name || 
-                                 wpPost._embedded?.author?.[0]?.name || 
-                                 'Unknown Author';
+            const postAuthorName = wpPost.acf?.post_author_name ||
+                wpPost.meta?.post_author_name ||
+                wpPost._embedded?.author?.[0]?.name ||
+                'Unknown Author';
 
             return {
                 _id: wpPost.id.toString(),
@@ -81,7 +82,7 @@ async function fetchWordPressBlogs(categoryId, page = 1, perPage = 100) {
                 tags: wpTagNames || []
             };
         }));
-        
+
         return blogs;
     } catch (error) {
         console.error('Error fetching WordPress blogs:', error);
@@ -176,7 +177,7 @@ export default function CategoryBlogList({ categorySlug }) {
                     {categoryInfo?.name || categorySlug} Blogs
                 </h1>
                 {categoryInfo?.description && (
-                    <p 
+                    <p
                         className="text-gray-600 text-lg max-w-3xl mx-auto"
                         dangerouslySetInnerHTML={{ __html: categoryInfo.description }}
                     />
@@ -191,11 +192,15 @@ export default function CategoryBlogList({ categorySlug }) {
                         className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition flex flex-col h-full"
                     >
                         {getBlogImageUrl(blog) ? (
-                            <img
-                                src={getBlogImageUrl(blog)}
-                                alt={blog.title}
-                                className="w-full h-48 object-cover"
-                            />
+                            <div className="relative w-full h-48">
+                                <Image
+                                    src={getBlogImageUrl(blog)}
+                                    alt={blog.title}
+                                    fill
+                                    className="object-cover"
+                                    unoptimized
+                                />
+                            </div>
                         ) : (
                             <div className="w-full h-48 flex items-center justify-center text-3xl font-bold text-white bg-gradient-to-r from-purple-600 via-pink-500 to-yellow-400 shadow-lg">
                                 {blog.categoryIds?.[0]?.name || 'TechyBlog'}

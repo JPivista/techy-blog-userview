@@ -19,10 +19,6 @@ export async function POST(req) {
             metaDescription = jsonData.metaDescription;
             imageLink = jsonData.imageLink || '';
 
-            console.log('📦 JSON data received:', {
-                hasImageLink: !!imageLink,
-                imageLink: imageLink || 'none'
-            });
         } catch (jsonError) {
             console.error('Error parsing request:', jsonError);
             return NextResponse.json({
@@ -55,12 +51,6 @@ export async function POST(req) {
 
         // Remove spaces from Application Password if present (WordPress generates them with spaces like "xxxx xxxx xxxx")
         WORDPRESS_PASSWORD = WORDPRESS_PASSWORD.replace(/\s+/g, '');
-
-        console.log('🔑 WordPress credentials loaded:', {
-            username: WORDPRESS_USERNAME,
-            passwordLength: WORDPRESS_PASSWORD.length,
-            passwordPreview: WORDPRESS_PASSWORD.substring(0, 4) + '***'
-        });
 
         // Step 1: Get all categories and match by name to get IDs
         const categoriesResponse = await fetch(`${WORDPRESS_URL}/wp-json/wp/v2/categories?per_page=100`);
@@ -123,7 +113,6 @@ export async function POST(req) {
                 if (existingTags && existingTags.length > 0) {
                     // Tag exists, use the tag ID
                     tagIds.push(existingTags[0].id);
-                    console.log(`✅ Found existing tag: ${trimmedTagName} (ID: ${existingTags[0].id})`);
                 } else {
                     // Create new tag
                     const createTagResponse = await fetch(`${WORDPRESS_URL}/wp-json/wp/v2/tags`, {
@@ -142,7 +131,6 @@ export async function POST(req) {
                         // Tag created successfully, get the ID
                         const createdTag = await createTagResponse.json();
                         tagIds.push(createdTag.id);
-                        console.log(`✅ Created new tag: ${trimmedTagName} (ID: ${createdTag.id})`);
                     } else {
                         const errorText = await createTagResponse.text();
                         console.warn(`⚠️ Failed to create tag: ${trimmedTagName}`, errorText);
@@ -157,14 +145,6 @@ export async function POST(req) {
 
         // Step 4: Test authentication first with multiple methods
         const authHeader = 'Basic ' + Buffer.from(`${WORDPRESS_USERNAME}:${WORDPRESS_PASSWORD}`).toString('base64');
-
-        // First, test authentication by checking current user
-        console.log('🔐 Testing WordPress authentication...');
-        console.log('Auth details:', {
-            username: WORDPRESS_USERNAME,
-            passwordLength: WORDPRESS_PASSWORD.length,
-            base64Header: authHeader.substring(0, 20) + '...'
-        });
 
         // Try to authenticate
         const authTestResponse = await fetch(`${WORDPRESS_URL}/wp-json/wp/v2/users/me`, {
@@ -236,14 +216,8 @@ export async function POST(req) {
         }
 
         const currentUser = authErrorData.id ? authErrorData : await JSON.parse(authResponseText);
-        console.log('✅ Authentication successful:', {
-            userId: currentUser.id,
-            username: currentUser.name || currentUser.slug,
-            roles: currentUser.roles
-        });
 
         // Step 5: Process image link (no upload needed, just save the URL)
-        console.log('📷 Image link received:', imageLink || 'none');
 
         // Step 6: Create WordPress post directly
         const postData = {
@@ -254,12 +228,6 @@ export async function POST(req) {
             tags: tagIds.length > 0 ? tagIds : [], // WordPress REST API requires tag IDs (integers), not names
             excerpt: description || metaDescription || '',
         };
-
-        console.log('📤 Creating WordPress post:', {
-            url: `${WORDPRESS_URL}/wp-json/wp/v2/posts`,
-            username: WORDPRESS_USERNAME,
-            postData: { ...postData, content: '[content hidden]' }
-        });
 
         const createPostResponse = await fetch(`${WORDPRESS_URL}/wp-json/wp/v2/posts`, {
             method: 'POST',
@@ -365,12 +333,6 @@ export async function POST(req) {
             throw new Error('Failed to parse WordPress response');
         }
 
-        console.log('✅ WordPress post created successfully:', {
-            postId: createdPost.id,
-            status: createdPost.status,
-            link: createdPost.link
-        });
-
         // Note: Image upload is now done BEFORE creating post (Step 5 above)
         // This ensures we can set featured_media directly when creating the post
 
@@ -392,8 +354,6 @@ export async function POST(req) {
                 acfFields.fields['image_link'] = imageLink;
             }
 
-            console.log('📝 Updating ACF fields:', acfFields);
-
             const acfUpdateResponse = await fetch(`${WORDPRESS_URL}/wp-json/acf/v3/posts/${createdPost.id}`, {
                 method: 'POST',
                 headers: {
@@ -404,7 +364,6 @@ export async function POST(req) {
             });
 
             if (acfUpdateResponse.ok) {
-                console.log('✅ ACF fields updated successfully via ACF REST API');
             } else {
                 const acfErrorText = await acfUpdateResponse.text();
                 console.warn('⚠️ ACF REST API failed, trying alternative method:', acfErrorText);
@@ -447,7 +406,6 @@ export async function POST(req) {
                 });
 
                 if (metaUpdateResponse.ok) {
-                    console.log('✅ ACF fields updated via meta fields');
                 } else {
                     const metaErrorText = await metaUpdateResponse.text();
                     console.warn('⚠️ Meta update also failed:', metaErrorText);

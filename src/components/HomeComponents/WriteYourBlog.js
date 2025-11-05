@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 const WriteYourBlog = () => {
     const router = useRouter();
@@ -226,8 +227,6 @@ const WriteYourBlog = () => {
                 formName: formData.formName
             };
 
-            console.log('📤 Submitting blog data to trigger email verification...');
-
             // Submit to blog-submissions API to get submissionId and trigger OTP
             const response = await fetch('/api/blog-submissions/submitBlog', {
                 method: 'POST',
@@ -241,8 +240,6 @@ const WriteYourBlog = () => {
             setLoading(false);
 
             if (result.success && result.data && result.data.submissionId) {
-                console.log('✅ OTP sent to email. Submission ID:', result.data.submissionId);
-
                 // Store submission ID and show verification modal
                 setSubmissionId(result.data.submissionId);
                 setShowVerification(true);
@@ -277,8 +274,6 @@ const WriteYourBlog = () => {
                 imageLink: imageLink.trim() || '' // Add image link if provided
             };
 
-            console.log('📤 Submitting blog data to WordPress with image_link:', imageLink ? 'Yes' : 'No');
-
             // Submit to Contact Form 7 API
             try {
                 const formDataCF7 = new FormData();
@@ -292,7 +287,6 @@ const WriteYourBlog = () => {
                 });
 
                 const cf7Result = await cf7Response.json();
-                console.log('📧 Contact Form 7 submission result:', cf7Result);
             } catch (cf7Error) {
                 console.error('⚠️ Contact Form 7 submission error:', cf7Error);
                 // Continue with WordPress submission even if CF7 fails
@@ -310,7 +304,6 @@ const WriteYourBlog = () => {
             const result = await response.json();
 
             if (result.success) {
-                console.log('✅ Blog submitted successfully to WordPress:', result);
                 return { success: true, data: result.data };
             } else {
                 console.error('WordPress submission error:', result);
@@ -336,11 +329,6 @@ const WriteYourBlog = () => {
         }
 
         try {
-            console.log('📤 Verifying email:', {
-                submissionId,
-                verificationCode: verificationCode ? '***' : 'MISSING'
-            });
-
             const response = await fetch('/api/blog-submissions/verify-email', {
                 method: 'POST',
                 headers: {
@@ -353,12 +341,6 @@ const WriteYourBlog = () => {
             });
 
             const result = await response.json();
-
-            console.log('📧 Verification response:', {
-                success: result.success,
-                message: result.message,
-                status: response.status
-            });
 
             if (result.success) {
                 setIsVerified(true);
@@ -563,14 +545,13 @@ const WriteYourBlog = () => {
                                         Enter the URL of the image you want to use as the banner image
                                     </p>
                                     {imageLink && (
-                                        <div className="mt-4">
-                                            <img
+                                        <div className="mt-4 relative w-full h-64">
+                                            <Image
                                                 src={imageLink}
                                                 alt="Banner preview"
-                                                className="max-w-full h-auto rounded-lg border border-white/30"
-                                                onError={(e) => {
-                                                    e.target.style.display = 'none';
-                                                }}
+                                                fill
+                                                className="object-contain rounded-lg border border-white/30"
+                                                unoptimized
                                             />
                                         </div>
                                     )}

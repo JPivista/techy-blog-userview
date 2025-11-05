@@ -6,6 +6,7 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import Link from 'next/link';
+import Image from 'next/image';
 import { getBlogImageUrl } from '../../utils/imageUtils';
 
 const LatestBlogs = () => {
@@ -144,18 +145,13 @@ const LatestBlogs = () => {
                                 <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl hover:scale-105 transition-all duration-300 ease-in-out h-full flex flex-col group">
                                     {/* Image or fallback */}
                                     {getBlogImageUrl(blog) ? (
-                                        <div className="overflow-hidden">
-                                            <img
+                                        <div className="overflow-hidden relative w-full h-48">
+                                            <Image
                                                 src={getBlogImageUrl(blog)}
                                                 alt={blog.title}
-                                                className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-300 ease-in-out"
-                                                onError={(e) => {
-                                                    console.error('Image failed to load:', e.target.src);
-                                                    e.target.style.display = 'none';
-                                                }}
-                                                onLoad={() => {
-                                                    console.log('Image loaded successfully:', getBlogImageUrl(blog));
-                                                }}
+                                                fill
+                                                className="object-cover group-hover:scale-110 transition-transform duration-300 ease-in-out"
+                                                unoptimized
                                             />
                                         </div>
                                     ) : (

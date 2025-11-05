@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { getBlogImageUrl, getBlogBannerUrl } from '../../../utils/imageUtils';
 
@@ -291,11 +292,13 @@ export default async function BlogDetailsPage({ params }) {
 
                 {/* Blog Banner Image */}
                 {getBlogBannerUrl(blog) && (
-                    <div className="mb-6">
-                        <img
+                    <div className="mb-6 relative w-full h-64 md:h-96">
+                        <Image
                             src={getBlogBannerUrl(blog)}
                             alt={blog.title}
-                            className="w-full h-64 md:h-96 object-cover rounded-lg shadow-lg"
+                            fill
+                            className="object-cover rounded-lg shadow-lg"
+                            unoptimized
                         />
                     </div>
                 )}

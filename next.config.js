@@ -28,6 +28,21 @@ const nextConfig = {
                 protocol: 'https',
                 hostname: 'api.techy-blog.com',
                 pathname: '/uploads/**',
+            },
+            {
+                protocol: 'https',
+                hostname: 'techy-blog.com',
+                pathname: '/**',
+            },
+            {
+                protocol: 'https',
+                hostname: 'www.techy-blog.com',
+                pathname: '/**',
+            },
+            {
+                protocol: 'https',
+                hostname: 'docs.techy-blog.com',
+                pathname: '/**',
             }
         ]
     }
