@@ -105,8 +105,8 @@ export async function POST(req) {
             console.warn('No matching categories found. Post will be created without categories.');
         }
 
-        // Step 2: Get or create tags and ensure they exist (use tag names/slugs, not IDs)
-        const tagNames = [];
+        // Step 2: Get or create tags and ensure they exist (use tag IDs, not names)
+        const tagIds = [];
         if (tags && tags.length > 0) {
             const authHeader = 'Basic ' + Buffer.from(`${WORDPRESS_USERNAME}:${WORDPRESS_PASSWORD}`).toString('base64');
 
@@ -121,8 +121,9 @@ export async function POST(req) {
                 const existingTags = await existingTagsResponse.json();
 
                 if (existingTags && existingTags.length > 0) {
-                    // Tag exists, use the tag name
-                    tagNames.push(trimmedTagName);
+                    // Tag exists, use the tag ID
+                    tagIds.push(existingTags[0].id);
+                    console.log(`✅ Found existing tag: ${trimmedTagName} (ID: ${existingTags[0].id})`);
                 } else {
                     // Create new tag
                     const createTagResponse = await fetch(`${WORDPRESS_URL}/wp-json/wp/v2/tags`, {
@@ -138,10 +139,13 @@ export async function POST(req) {
                     });
 
                     if (createTagResponse.ok) {
-                        // Tag created successfully, use the tag name
-                        tagNames.push(trimmedTagName);
+                        // Tag created successfully, get the ID
+                        const createdTag = await createTagResponse.json();
+                        tagIds.push(createdTag.id);
+                        console.log(`✅ Created new tag: ${trimmedTagName} (ID: ${createdTag.id})`);
                     } else {
-                        console.warn(`Failed to create tag: ${trimmedTagName}`);
+                        const errorText = await createTagResponse.text();
+                        console.warn(`⚠️ Failed to create tag: ${trimmedTagName}`, errorText);
                     }
                 }
             }
@@ -247,7 +251,7 @@ export async function POST(req) {
             content: formattedContent, // Just the blog content, no author info
             status: 'pending', // Create as pending for review
             categories: categoryIds.length > 0 ? categoryIds : [],
-            tags: tagNames.length > 0 ? tagNames : [], // Use tag names instead of IDs
+            tags: tagIds.length > 0 ? tagIds : [], // WordPress REST API requires tag IDs (integers), not names
             excerpt: description || metaDescription || '',
         };
 
