@@ -62,8 +62,8 @@ const Footer = () => {
                     <div>
                         <h4 className="font-semibold mb-4 text-lg">Contact Us</h4>
                         <p className="text-gray-300 text-sm mb-2">
-                            <a href="mailto:support@techyblog.com" className="hover:underline">
-                                Email: support@techyblog.com
+                            <a href="mailto:mvivekraz@gmail.com" className="hover:underline">
+                                Email: mvivekraz@gmail.com
                             </a>
                         </p>
                         {/* <p className="text-gray-300 text-sm mb-2 flex items-center gap-2">
