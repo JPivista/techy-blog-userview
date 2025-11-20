@@ -162,11 +162,8 @@ const WriteYourBlog = () => {
             alert('Email is required');
             return false;
         }
-        if (!formData.mobileNumber.trim()) {
-            alert('Mobile number is required');
-            return false;
-        }
-        if (formData.mobileNumber.length !== 10) {
+        // Mobile number is optional, but if provided, it must be exactly 10 digits
+        if (formData.mobileNumber.trim() && formData.mobileNumber.length !== 10) {
             alert('Mobile number must be exactly 10 digits');
             return false;
         }
@@ -355,7 +352,7 @@ const WriteYourBlog = () => {
                 const backendResult = await submitToBackends();
 
                 if (backendResult.success) {
-                    setVerificationMessage('🎉 Thank you! Your email has been verified and your blog has been submitted successfully! A thank you email has been sent to your inbox. Your post has been submitted for review and will be published after approval.' + (backendResult.data?.postId ? `\n\nPost ID: ${backendResult.data.postId}` : ''));
+                    setVerificationMessage('🎉 Thank you! Your email has been verified and your blog has been submitted successfully! A confirmation email has been sent to your inbox.\n\n✨ Your post is now under review by our editorial team. We carefully review each submission to ensure quality and relevance. You can expect to hear back from us within 24 to 72 hours. Once approved, your blog will be published and shared with our community of readers.\n\nWe appreciate your patience and look forward to sharing your insights with the world!' + (backendResult.data?.postId ? `\n\n📝 Post ID: ${backendResult.data.postId}` : ''));
                 } else {
                     setVerificationError(`Email verified, but submission failed: ${backendResult.message || 'Unknown error'}`);
                     setIsVerified(false); // Allow retry
@@ -486,14 +483,13 @@ const WriteYourBlog = () => {
                                 </div>
 
                                 <div>
-                                    <label className="block mb-2 text-sm font-medium text-white">Mobile Number *</label>
+                                    <label className="block mb-2 text-sm font-medium text-white">Mobile Number</label>
                                     <input
                                         type="tel"
                                         name="mobileNumber"
-                                        required
                                         value={formData.mobileNumber}
                                         onChange={handleChange}
-                                        placeholder="Enter your mobile number"
+                                        placeholder="Enter your mobile number (optional)"
                                         className="w-full p-4 rounded-xl bg-white/20 border border-white/30 text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-all"
                                     />
                                 </div>
@@ -533,16 +529,22 @@ const WriteYourBlog = () => {
                                 </div>
 
                                 <div>
-                                    <label className="block mb-2 text-sm font-medium text-white">Image Link</label>
+                                    <label className="block mb-2 text-sm font-medium text-white">
+                                        Image Link (Google Drive Link) *
+                                    </label>
                                     <input
                                         type="url"
                                         value={imageLink}
                                         onChange={(e) => setImageLink(e.target.value)}
-                                        placeholder="https://example.com/image.jpg"
+                                        placeholder="https://drive.google.com/file/d/... or https://drive.google.com/uc?export=view&id=..."
                                         className="w-full p-4 rounded-xl bg-white/20 border border-white/30 text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-all"
+                                        required
                                     />
                                     <p className="text-sm text-gray-300 mt-2">
-                                        Enter the URL of the image you want to use as the banner image
+                                        Enter your Google Drive image link. Make sure the file is set to "Anyone with the link can view" for it to work properly.
+                                    </p>
+                                    <p className="text-xs text-yellow-300 mt-1">
+                                        💡 Tip: Right-click your image in Google Drive → Get link → Make sure sharing is set to "Anyone with the link"
                                     </p>
                                     {imageLink && (
                                         <div className="mt-4 relative w-full h-64">
