@@ -32,6 +32,7 @@ html {
 
 body {
   scroll-behavior: smooth;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
 
 /* Reset scroll position on page load */
@@ -42,4 +43,46 @@ html, body {
 /* Ensure smooth scrolling for all elements */
 * {
   scroll-behavior: smooth;
+}
+
+/* Responsive H1 font size - optimized for all screen sizes including Windows laptops */
+/* Mobile: 32px, Tablet: 36px, Small Laptop: 40px, Desktop: 44px, Large: 48px */
+h1 {
+  font-size: clamp(2rem, 2.5vw + 1.5rem, 3rem) !important; /* 32px to 48px, scales smoothly */
+  line-height: 1.2;
+}
+
+/* Windows laptops and smaller screens (768px - 1366px) - max 40px */
+@media (min-width: 768px) and (max-width: 1366px) {
+  h1 {
+    font-size: clamp(2rem, 2vw + 1.25rem, 2.5rem) !important; /* 32px to 40px */
+  }
+}
+
+/* Standard desktop screens (1367px - 1920px) - max 44px */
+@media (min-width: 1367px) and (max-width: 1920px) {
+  h1 {
+    font-size: clamp(2.25rem, 2vw + 1.25rem, 2.75rem) !important; /* 36px to 44px */
+  }
+}
+
+/* Large screens (1921px+) - max 48px */
+@media (min-width: 1921px) {
+  h1 {
+    font-size: clamp(2.5rem, 1.5vw + 1.5rem, 3rem) !important; /* 40px to 48px */
+  }
+}
+
+/* Custom animations for BurstButton */
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 8s linear infinite;
 }

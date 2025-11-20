@@ -2,6 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
+import Script from 'next/script';
 import { getBlogImageUrl, getBlogBannerUrl } from '../../../utils/imageUtils';
 
 async function fetchWordPressPost(slug) {
@@ -66,6 +67,9 @@ export async function generateMetadata({ params }) {
         if (wpPost) {
             // Fetch categories to get category names
             const wpCategories = await fetchWordPressCategories(wpPost.categories || []);
+
+            // Fetch tags to get tag names
+            const wpTagNames = await fetchWordPressTags(wpPost.tags || []);
 
             // Extract featured image from _embedded
             const featuredImage = wpPost._embedded?.['wp:featuredmedia']?.[0]?.source_url || null;
@@ -146,6 +150,9 @@ export async function generateMetadata({ params }) {
         title: `${slug.replace(/-/g, ' ')} | ${category} | TechyBlog`,
         description: `Read the latest blog post about ${category} - ${slug.replace(/-/g, ' ')}`,
         keywords: `${category}, blog, article`,
+        alternates: {
+            canonical: `${fullDomain}/${category}/${slug}`,
+        },
     };
 }
 
@@ -255,7 +262,18 @@ export default async function BlogDetailsPage({ params }) {
     const blog = await getBlog(slug);
     const allBlogs = await getAllBlogs();
 
+    // If blog doesn't exist, show 404
     if (!blog) {
+        notFound();
+    }
+
+    // Validate that the blog belongs to the specified category
+    const categoryMatches = blog.categoryIds?.some(
+        cat => cat.slug === category
+    );
+
+    // If category doesn't match, show 404
+    if (!categoryMatches) {
         notFound();
     }
 
@@ -269,8 +287,46 @@ export default async function BlogDetailsPage({ params }) {
             )
     ).slice(0, 3); // limit to 3 related blogs
 
+    const fullDomain = process.env.NEXT_PUBLIC_FULL_DOMAIN || 'https://techy-blog.com';
+    const blogUrl = `${fullDomain}/${category}/${slug}`;
+    
+    // Create Article schema
+    const articleSchema = {
+        "@context": "https://schema.org",
+        "@type": "BlogPosting",
+        "headline": blog.title,
+        "description": blog.metaDescription || blog.description?.replace(/<[^>]*>/g, '').substring(0, 160) || `Read the latest blog post: ${blog.title}`,
+        "image": blog.banner ? [blog.banner] : [],
+        "datePublished": blog.publishedDate,
+        "dateModified": blog.updatedAt || blog.publishedDate,
+        "author": {
+            "@type": "Person",
+            "name": blog.authorName || "Unknown Author"
+        },
+        "publisher": {
+            "@type": "Organization",
+            "name": "TechyBlog",
+            "url": fullDomain,
+            "logo": {
+                "@type": "ImageObject",
+                "url": `${fullDomain}/favicon.ico`
+            }
+        },
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": blogUrl
+        },
+        "articleSection": blog.categoryIds?.[0]?.name || category,
+        "keywords": blog.tags?.join(', ') || category
+    };
+
     return (
         <div className="max-w-6xl mx-auto py-10 px-4 grid grid-cols-1 md:grid-cols-3 gap-10">
+            <Script
+                id="article-schema"
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
+            />
             {/* Blog Content */}
             <div className="md:col-span-2">
                 {/* Breadcrumbs */}

@@ -1,0 +1,21 @@
+{
+  "name": "TechyBlog - Share Your Knowledge",
+  "short_name": "TechyBlog",
+  "description": "Transform your technical knowledge into powerful content. Join TechyBlog's elite community of tech writers.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a1a2e",
+  "theme_color": "#7c3aed",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "any",
+      "type": "image/x-icon"
+    }
+  ],
+  "categories": ["education", "technology", "blogging"],
+  "lang": "en-US",
+  "dir": "ltr"
+}
+

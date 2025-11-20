@@ -83,6 +83,17 @@ const Footer = () => {
                 <div className="text-sm text-gray-500">
                     &copy; {new Date().getFullYear()} techyblog. All rights reserved. | Starting Today
                 </div>
+                <div className="text-sm text-gray-500 mt-2">
+                    Created by{" "}
+                    <a 
+                        href="https://youngzen.in/" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-purple-400 hover:text-purple-300 underline transition-colors"
+                    >
+                        YoungZen Technologies
+                    </a>
+                </div>
             </div>
         </footer>
     );

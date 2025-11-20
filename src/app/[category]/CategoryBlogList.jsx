@@ -146,9 +146,86 @@ export default function CategoryBlogList({ categorySlug }) {
     if (blogs.length === 0) {
         return (
             <div className="max-w-6xl mx-auto px-4 py-10">
-                <div className="text-center py-12">
-                    <p className="text-gray-500 text-lg mb-4">No blogs available in this category yet.</p>
-                    <p className="text-gray-400">Check back soon for new content!</p>
+                {/* Breadcrumbs */}
+                <nav className="text-sm text-gray-500 mb-4">
+                    <ul className="flex items-center gap-2">
+                        <li>
+                            <Link href="/" className="hover:underline text-purple-600">
+                                Home
+                            </Link>
+                        </li>
+                        <li>/</li>
+                        <li className="text-gray-700 capitalize line-clamp-1">
+                            {categoryInfo?.name || categorySlug}
+                        </li>
+                    </ul>
+                </nav>
+
+                {/* Category Header */}
+                <div className="text-center mb-12">
+                    <h1 className="text-4xl font-bold mb-4 capitalize">
+                        {categoryInfo?.name || categorySlug} Blogs
+                    </h1>
+                    {categoryInfo?.description && (
+                        <p
+                            className="text-gray-600 text-lg max-w-3xl mx-auto"
+                            dangerouslySetInnerHTML={{ __html: categoryInfo.description }}
+                        />
+                    )}
+                </div>
+
+                {/* Beautiful Empty State */}
+                <div className="flex flex-col items-center justify-center py-20 px-4">
+                    <div className="relative mb-8">
+                        {/* Animated background circles */}
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-32 h-32 bg-gradient-to-r from-purple-200 via-pink-200 to-yellow-200 rounded-full opacity-20 animate-pulse"></div>
+                        </div>
+                        <div className="relative z-10">
+                            <div className="w-24 h-24 mx-auto bg-gradient-to-r from-purple-600 via-pink-500 to-yellow-400 rounded-full flex items-center justify-center shadow-lg">
+                                <svg 
+                                    className="w-12 h-12 text-white" 
+                                    fill="none" 
+                                    stroke="currentColor" 
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path 
+                                        strokeLinecap="round" 
+                                        strokeLinejoin="round" 
+                                        strokeWidth={2} 
+                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" 
+                                    />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h2 className="text-3xl md:text-4xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-pink-500 to-yellow-400">
+                        Coming Soon!
+                    </h2>
+                    
+                    <p className="text-gray-600 text-lg mb-2 max-w-md mx-auto text-center">
+                        We're working on bringing you amazing content in this category.
+                    </p>
+                    
+                    <p className="text-gray-500 text-base mb-8 max-w-md mx-auto text-center">
+                        Check back soon for fresh articles and insights!
+                    </p>
+
+                    <div className="flex flex-col sm:flex-row gap-4">
+                        <Link
+                            href="/"
+                            className="px-6 py-3 bg-gradient-to-r from-purple-600 via-pink-500 to-yellow-400 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
+                        >
+                            Explore Other Categories
+                        </Link>
+                        <Link
+                            href="/write-blog"
+                            className="px-6 py-3 bg-white border-2 border-purple-600 text-purple-600 font-semibold rounded-lg hover:bg-purple-50 transition-all duration-300"
+                        >
+                            Write a Blog
+                        </Link>
+                    </div>
                 </div>
             </div>
         );

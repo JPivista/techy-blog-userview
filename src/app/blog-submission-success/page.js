@@ -1,10 +1,51 @@
 'use client';
-import React from 'react';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
+import Script from 'next/script';
 
 const BlogSubmissionSuccess = () => {
+    const fullDomain = process.env.NEXT_PUBLIC_FULL_DOMAIN || 'https://techy-blog.com';
+
+    useEffect(() => {
+        // Add canonical link
+        const link = document.createElement('link');
+        link.rel = 'canonical';
+        link.href = `${fullDomain}/blog-submission-success`;
+        document.head.appendChild(link);
+
+        // Update document title and meta description
+        document.title = "Blog Submitted Successfully - TechyBlog";
+        let metaDescription = document.querySelector('meta[name="description"]');
+        if (!metaDescription) {
+            metaDescription = document.createElement('meta');
+            metaDescription.name = 'description';
+            document.head.appendChild(metaDescription);
+        }
+        metaDescription.content = "Thank you for sharing your knowledge with our community! We've received your blog submission and our team will review it shortly.";
+
+        return () => {
+            // Cleanup
+            const canonicalLink = document.querySelector('link[rel="canonical"]');
+            if (canonicalLink && canonicalLink.href === `${fullDomain}/blog-submission-success`) {
+                canonicalLink.remove();
+            }
+        };
+    }, [fullDomain]);
+
+    const successPageSchema = {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "name": "Blog Submitted Successfully - TechyBlog",
+        "url": `${fullDomain}/blog-submission-success`,
+        "description": "Thank you for sharing your knowledge with our community! We've received your blog submission and our team will review it shortly."
+    };
     return (
         <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
+            <Script
+                id="blog-submission-success-schema"
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(successPageSchema) }}
+            />
             <div className="max-w-2xl mx-auto text-center">
                 <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl p-12">
                     {/* Success Icon */}

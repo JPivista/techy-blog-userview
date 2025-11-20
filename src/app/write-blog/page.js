@@ -1,7 +1,8 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import Script from 'next/script';
 import {
     FaPen,
     FaLightbulb,
@@ -20,6 +21,50 @@ import {
 const WriteBlogPage = () => {
     const router = useRouter();
     const [isHovered, setIsHovered] = useState(false);
+    const fullDomain = process.env.NEXT_PUBLIC_FULL_DOMAIN || 'https://techy-blog.com';
+
+    useEffect(() => {
+        // Add canonical link
+        const link = document.createElement('link');
+        link.rel = 'canonical';
+        link.href = `${fullDomain}/write-blog`;
+        document.head.appendChild(link);
+
+        // Update document title and meta description
+        document.title = "Write Your Story - TechyBlog";
+        let metaDescription = document.querySelector('meta[name="description"]');
+        if (!metaDescription) {
+            metaDescription = document.createElement('meta');
+            metaDescription.name = 'description';
+            document.head.appendChild(metaDescription);
+        }
+        metaDescription.content = "Share your expertise, experiences, and insights with the world. Your voice matters, and your story deserves to be heard.";
+
+        return () => {
+            // Cleanup
+            const canonicalLink = document.querySelector('link[rel="canonical"]');
+            if (canonicalLink && canonicalLink.href === `${fullDomain}/write-blog`) {
+                canonicalLink.remove();
+            }
+        };
+    }, [fullDomain]);
+
+    const writeBlogPageSchema = {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "name": "Write Your Story - TechyBlog",
+        "url": `${fullDomain}/write-blog`,
+        "description": "Share your expertise, experiences, and insights with the world. Your voice matters, and your story deserves to be heard.",
+        "mainEntity": {
+            "@type": "Service",
+            "name": "Blog Writing Service",
+            "provider": {
+                "@type": "Organization",
+                "name": "TechyBlog",
+                "url": fullDomain
+            }
+        }
+    };
 
     const benefits = [
         {
@@ -55,6 +100,11 @@ const WriteBlogPage = () => {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
+            <Script
+                id="write-blog-page-schema"
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(writeBlogPageSchema) }}
+            />
             {/* Hero Section */}
             <section className="relative overflow-hidden pt-20 px-4">
                 <div className="max-w-6xl mx-auto text-center relative z-10">

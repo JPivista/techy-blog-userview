@@ -1,0 +1,11 @@
+/* TEAM */
+Developer: YoungZen Technologies
+Contact: https://youngzen.in/
+Location: India, UAE
+
+/* SITE */
+Last update: 2025/01/27
+Standards: HTML5, CSS3, JavaScript ES6+, React, Next.js
+Components: React Icons, Tailwind CSS
+Software: Next.js 15, React 19
+

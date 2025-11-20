@@ -1,5 +1,20 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+    async redirects() {
+        return [
+            {
+                source: '/:path*',
+                has: [
+                    {
+                        type: 'host',
+                        value: 'www.techy-blog.com',
+                    },
+                ],
+                destination: 'https://techy-blog.com/:path*',
+                permanent: true,
+            },
+        ];
+    },
     async rewrites() {
         return [
             {
