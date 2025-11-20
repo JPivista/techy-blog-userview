@@ -425,11 +425,15 @@ export default async function BlogDetailsPage({ params }) {
                             className="bg-white rounded-md shadow-sm hover:shadow-md transition"
                         >
                             {getBlogImageUrl(related) ? (
-                                <img
-                                    src={getBlogImageUrl(related)}
-                                    alt={related.title}
-                                    className="w-full h-32 object-cover rounded-t-md"
-                                />
+                                <div className="relative w-full h-32">
+                                    <Image
+                                        src={getBlogImageUrl(related)}
+                                        alt={related.title}
+                                        fill
+                                        className="object-cover rounded-t-md"
+                                        unoptimized
+                                    />
+                                </div>
                             ) : (
                                 <div className="w-full h-32 flex items-center justify-center text-lg font-bold text-white bg-gradient-to-r from-purple-600 via-pink-500 to-yellow-400">
                                     {related.categoryIds?.[0]?.name || 'TechyBlog'}

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { getBlogImageUrl } from '../../utils/imageUtils';
 
 const BLOGS_PER_PAGE = 9;
@@ -168,7 +169,7 @@ const AllBlogs = () => {
                     </h3>
                     
                     <p className="text-gray-600 text-lg mb-2 max-w-md mx-auto text-center">
-                        We're working on bringing you amazing content.
+                        We&apos;re working on bringing you amazing content.
                     </p>
                     
                     <p className="text-gray-500 text-base mb-8 max-w-md mx-auto text-center">
@@ -200,11 +201,15 @@ const AllBlogs = () => {
                         className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition flex flex-col h-full"
                     >
                         {getBlogImageUrl(blog) ? (
-                            <img
-                                src={getBlogImageUrl(blog)}
-                                alt={blog.title}
-                                className="w-full h-48 object-cover"
-                            />
+                            <div className="relative w-full h-48">
+                                <Image
+                                    src={getBlogImageUrl(blog)}
+                                    alt={blog.title}
+                                    fill
+                                    className="object-cover"
+                                    unoptimized
+                                />
+                            </div>
                         ) : (
                             <div className="w-full h-48 flex items-center justify-center text-3xl font-bold text-white bg-gradient-to-r from-purple-600 via-pink-500 to-yellow-400 shadow-lg">
                                 {blog.categoryIds?.[0]?.name || 'TechyBlog'}
