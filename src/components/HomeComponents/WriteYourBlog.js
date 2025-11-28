@@ -1,7 +1,14 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
+import NextImage from 'next/image';
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import Placeholder from '@tiptap/extension-placeholder';
+import Image from '@tiptap/extension-image';
+import Link from '@tiptap/extension-link';
+import TextAlign from '@tiptap/extension-text-align';
+import Underline from '@tiptap/extension-underline';
 
 const WriteYourBlog = () => {
     const router = useRouter();
@@ -31,6 +38,8 @@ const WriteYourBlog = () => {
     const [loading, setLoading] = useState(false);
     const [categoriesLoading, setCategoriesLoading] = useState(true);
     const [imageLink, setImageLink] = useState('');
+    const [imageSize, setImageSize] = useState(0); // Image size in bytes
+    const [isMounted, setIsMounted] = useState(false);
 
     // Verification Modal States
     const [showVerification, setShowVerification] = useState(false);
@@ -45,6 +54,82 @@ const WriteYourBlog = () => {
     const [otpTimer, setOtpTimer] = useState(0);
     const [isOtpValid, setIsOtpValid] = useState(false);
     const [canResendOtp, setCanResendOtp] = useState(true);
+
+    // Tiptap editor configuration - only create when mounted
+    const editor = useEditor({
+        extensions: [
+            StarterKit.configure({
+                heading: {
+                    levels: [2, 3],
+                },
+            }),
+            Placeholder.configure({
+                placeholder: 'Write your full blog content here... Use the toolbar to format with headings (H2, H3), paragraphs, lists, and more!',
+            }),
+            Image.configure({
+                inline: true,
+                allowBase64: true,
+            }),
+            Link.configure({
+                openOnClick: false,
+                HTMLAttributes: {
+                    class: 'text-blue-400 underline',
+                },
+            }),
+            TextAlign.configure({
+                types: ['heading', 'paragraph'],
+            }),
+            Underline,
+        ],
+        content: formData.content,
+        onUpdate: ({ editor }) => {
+            setFormData(prev => ({ ...prev, content: editor.getHTML() }));
+        },
+        editorProps: {
+            attributes: {
+                class: 'prose prose-invert max-w-none focus:outline-none min-h-[300px] p-4 text-white',
+            },
+        },
+        immediatelyRender: false,
+        enabled: isMounted,
+    });
+
+    // Update editor content when formData.content changes externally
+    useEffect(() => {
+        if (editor && isMounted && formData.content !== editor.getHTML()) {
+            editor.commands.setContent(formData.content);
+        }
+    }, [formData.content, editor, isMounted]);
+
+    // Handle image link insertion - defined after editor (inserts URL as text, not image)
+    const handleImageLink = useCallback(() => {
+        if (!editor) {
+            alert('Editor not ready. Please try again.');
+            return;
+        }
+
+        const imageUrl = window.prompt('Enter image URL (Google Drive link, Google Photos link, or any image URL):\n\n💡 Tip: For Google Drive/Photos, make sure the file is set to "Anyone with the link can view"');
+
+        if (!imageUrl) {
+            return; // User cancelled
+        }
+
+        // Basic URL validation
+        try {
+            new URL(imageUrl);
+        } catch (e) {
+            alert('Please enter a valid URL');
+            return;
+        }
+
+        // Insert URL as plain text (not as image element)
+        editor.chain().focus().insertContent(imageUrl).run();
+    }, [editor]);
+
+    // Ensure component is mounted on client to avoid hydration mismatch
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
 
     // Fetch categories from WordPress API
     useEffect(() => {
@@ -152,6 +237,62 @@ const WriteYourBlog = () => {
         }));
     };
 
+    // Fetch and calculate image size
+    useEffect(() => {
+        const fetchImageSize = async () => {
+            if (!imageLink) {
+                setImageSize(0);
+                return;
+            }
+
+            try {
+                // Try to fetch the image to get its actual size
+                const response = await fetch(imageLink, { method: 'HEAD' });
+                const contentLength = response.headers.get('content-length');
+
+                if (contentLength) {
+                    setImageSize(parseInt(contentLength, 10));
+                } else {
+                    // If HEAD doesn't work, try GET but only read headers
+                    const imgResponse = await fetch(imageLink);
+                    const blob = await imgResponse.blob();
+                    setImageSize(blob.size);
+                }
+            } catch (error) {
+                // If we can't fetch, estimate based on URL or set a default
+                // For Google Drive links, we can't easily get size, so estimate 500KB
+                console.warn('Could not fetch image size:', error);
+                setImageSize(500 * 1024); // Default estimate: 500KB
+            }
+        };
+
+        fetchImageSize();
+    }, [imageLink]);
+
+    // Calculate content size in bytes (including images)
+    const calculateContentSize = () => {
+        let totalSize = 0;
+
+        // Calculate text content size (UTF-8 encoding: 1-4 bytes per character)
+        const textContent = formData.title + formData.description + formData.content +
+            formData.metaTitle + formData.metaDescription + formData.tags;
+        totalSize += new Blob([textContent]).size;
+
+        // Add actual image size (fetched from image)
+        totalSize += imageSize;
+
+        // Calculate base64 embedded images in content (if any)
+        const base64Images = formData.content.match(/data:image\/[^;]+;base64,[A-Za-z0-9+/=]+/g);
+        if (base64Images) {
+            base64Images.forEach(base64 => {
+                // Base64 size is approximately 4/3 of original, but we count the string length
+                totalSize += new Blob([base64]).size;
+            });
+        }
+
+        return totalSize;
+    };
+
     // Form validation function
     const validateForm = () => {
         if (!formData.fullName.trim()) {
@@ -195,6 +336,17 @@ const WriteYourBlog = () => {
             alert('Meta description is required');
             return false;
         }
+
+        // Check content size (2MB = 2 * 1024 * 1024 bytes)
+        const maxSize = 2 * 1024 * 1024; // 2MB in bytes
+        const contentSize = calculateContentSize();
+
+        if (contentSize > maxSize) {
+            const sizeInMB = (contentSize / (1024 * 1024)).toFixed(2);
+            alert(`Content size (${sizeInMB} MB) exceeds the maximum limit of 2 MB. Please reduce the content size or use smaller images.`);
+            return false;
+        }
+
         return true;
     };
 
@@ -548,7 +700,7 @@ const WriteYourBlog = () => {
                                     </p>
                                     {imageLink && (
                                         <div className="mt-4 relative w-full h-64">
-                                            <Image
+                                            <NextImage
                                                 src={imageLink}
                                                 alt="Banner preview"
                                                 fill
@@ -561,15 +713,370 @@ const WriteYourBlog = () => {
 
                                 <div>
                                     <label className="block mb-2 text-sm font-medium text-white">Blog Content *</label>
-                                    <textarea
-                                        name="content"
-                                        rows="8"
-                                        required
-                                        value={formData.content}
-                                        onChange={handleChange}
-                                        placeholder="Write your full blog content here..."
-                                        className="w-full p-4 rounded-xl bg-white/20 border border-white/30 text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-all resize-none"
-                                    ></textarea>
+                                    <div className="mb-4 p-4 bg-blue-500/20 border border-blue-400/30 rounded-lg">
+                                        <p className="text-sm text-white font-semibold mb-2">📝 Option 1: Share Google Drive Document</p>
+                                        <p className="text-sm text-gray-200 mb-2">
+                                            If you have your blog content in a Google Drive document, please share it with:
+                                        </p>
+                                        <p className="text-sm text-yellow-300 font-mono mb-3">
+                                            <strong>mvivekraz@gmail.com</strong>
+                                        </p>
+                                        <p className="text-xs text-gray-300 mb-2">
+                                            <strong>Steps:</strong>
+                                        </p>
+                                        <ol className="text-xs text-gray-300 list-decimal list-inside space-y-1 ml-2">
+                                            <li>Open your Google Drive document</li>
+                                            <li>Click "Share" button</li>
+                                            <li>Add email: <span className="text-yellow-300 font-mono">mvivekraz@gmail.com</span></li>
+                                            <li>Give "Editor" or "Viewer" permission</li>
+                                            <li>Click "Send"</li>
+                                        </ol>
+                                        <p className="text-xs text-yellow-300 mt-3">
+                                            ⚠️ After sharing, you can write "Content shared via Google Drive" in the field below, or paste your content directly.
+                                        </p>
+                                    </div>
+                                    {isMounted && editor ? (
+                                        <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl overflow-hidden">
+                                            {/* Toolbar */}
+                                            <div className="flex flex-wrap gap-2 p-3 bg-white/15 border-b border-white/20">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+                                                    className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${editor.isActive('heading', { level: 2 })
+                                                        ? 'bg-yellow-400 text-gray-900'
+                                                        : 'bg-white/20 text-white hover:bg-white/30'
+                                                        }`}
+                                                >
+                                                    H2
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+                                                    className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${editor.isActive('heading', { level: 3 })
+                                                        ? 'bg-yellow-400 text-gray-900'
+                                                        : 'bg-white/20 text-white hover:bg-white/30'
+                                                        }`}
+                                                >
+                                                    H3
+                                                </button>
+                                                <div className="w-px h-6 bg-white/30 mx-1"></div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => editor.chain().focus().toggleBold().run()}
+                                                    className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${editor.isActive('bold')
+                                                        ? 'bg-yellow-400 text-gray-900'
+                                                        : 'bg-white/20 text-white hover:bg-white/30'
+                                                        }`}
+                                                >
+                                                    <strong>B</strong>
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => editor.chain().focus().toggleItalic().run()}
+                                                    className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${editor.isActive('italic')
+                                                        ? 'bg-yellow-400 text-gray-900'
+                                                        : 'bg-white/20 text-white hover:bg-white/30'
+                                                        }`}
+                                                >
+                                                    <em>I</em>
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => editor.chain().focus().toggleUnderline().run()}
+                                                    className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${editor.isActive('underline')
+                                                        ? 'bg-yellow-400 text-gray-900'
+                                                        : 'bg-white/20 text-white hover:bg-white/30'
+                                                        }`}
+                                                >
+                                                    <u>U</u>
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => editor.chain().focus().toggleStrike().run()}
+                                                    className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${editor.isActive('strike')
+                                                        ? 'bg-yellow-400 text-gray-900'
+                                                        : 'bg-white/20 text-white hover:bg-white/30'
+                                                        }`}
+                                                >
+                                                    <s>S</s>
+                                                </button>
+                                                <div className="w-px h-6 bg-white/30 mx-1"></div>
+                                                {/* Image Link */}
+                                                <button
+                                                    type="button"
+                                                    onClick={handleImageLink}
+                                                    className="px-3 py-1.5 rounded text-sm font-medium transition-colors bg-white/20 text-white hover:bg-white/30"
+                                                    title="Add Image Link (Google Drive or any image URL)"
+                                                >
+                                                    📷 Image
+                                                </button>
+                                                {/* Link */}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const url = window.prompt('Enter URL:');
+                                                        if (url) {
+                                                            editor.chain().focus().setLink({ href: url }).run();
+                                                        }
+                                                    }}
+                                                    className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${editor.isActive('link')
+                                                        ? 'bg-yellow-400 text-gray-900'
+                                                        : 'bg-white/20 text-white hover:bg-white/30'
+                                                        }`}
+                                                >
+                                                    🔗 Link
+                                                </button>
+                                                <div className="w-px h-6 bg-white/30 mx-1"></div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => editor.chain().focus().toggleBulletList().run()}
+                                                    className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${editor.isActive('bulletList')
+                                                        ? 'bg-yellow-400 text-gray-900'
+                                                        : 'bg-white/20 text-white hover:bg-white/30'
+                                                        }`}
+                                                >
+                                                    •
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => editor.chain().focus().toggleOrderedList().run()}
+                                                    className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${editor.isActive('orderedList')
+                                                        ? 'bg-yellow-400 text-gray-900'
+                                                        : 'bg-white/20 text-white hover:bg-white/30'
+                                                        }`}
+                                                >
+                                                    1.
+                                                </button>
+                                                <div className="w-px h-6 bg-white/30 mx-1"></div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => editor.chain().focus().toggleBlockquote().run()}
+                                                    className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${editor.isActive('blockquote')
+                                                        ? 'bg-yellow-400 text-gray-900'
+                                                        : 'bg-white/20 text-white hover:bg-white/30'
+                                                        }`}
+                                                >
+                                                    "
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => editor.chain().focus().setParagraph().run()}
+                                                    className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${editor.isActive('paragraph')
+                                                        ? 'bg-yellow-400 text-gray-900'
+                                                        : 'bg-white/20 text-white hover:bg-white/30'
+                                                        }`}
+                                                >
+                                                    P
+                                                </button>
+                                                <div className="w-px h-6 bg-white/30 mx-1"></div>
+                                                {/* Text Alignment */}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => editor.chain().focus().setTextAlign('left').run()}
+                                                    className={`px-2 py-1.5 rounded text-sm font-medium transition-colors ${editor.isActive({ textAlign: 'left' })
+                                                        ? 'bg-yellow-400 text-gray-900'
+                                                        : 'bg-white/20 text-white hover:bg-white/30'
+                                                        }`}
+                                                    title="Align Left"
+                                                >
+                                                    ⬅
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => editor.chain().focus().setTextAlign('center').run()}
+                                                    className={`px-2 py-1.5 rounded text-sm font-medium transition-colors ${editor.isActive({ textAlign: 'center' })
+                                                        ? 'bg-yellow-400 text-gray-900'
+                                                        : 'bg-white/20 text-white hover:bg-white/30'
+                                                        }`}
+                                                    title="Align Center"
+                                                >
+                                                    ⬌
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => editor.chain().focus().setTextAlign('right').run()}
+                                                    className={`px-2 py-1.5 rounded text-sm font-medium transition-colors ${editor.isActive({ textAlign: 'right' })
+                                                        ? 'bg-yellow-400 text-gray-900'
+                                                        : 'bg-white/20 text-white hover:bg-white/30'
+                                                        }`}
+                                                    title="Align Right"
+                                                >
+                                                    ➡
+                                                </button>
+                                                <div className="w-px h-6 bg-white/30 mx-1"></div>
+                                                {/* Code Block */}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+                                                    className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${editor.isActive('codeBlock')
+                                                        ? 'bg-yellow-400 text-gray-900'
+                                                        : 'bg-white/20 text-white hover:bg-white/30'
+                                                        }`}
+                                                >
+                                                    {'</>'}
+                                                </button>
+                                                {/* Undo/Redo */}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => editor.chain().focus().undo().run()}
+                                                    disabled={!editor.can().undo()}
+                                                    className="px-3 py-1.5 rounded text-sm font-medium transition-colors bg-white/20 text-white hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    title="Undo"
+                                                >
+                                                    ↶
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => editor.chain().focus().redo().run()}
+                                                    disabled={!editor.can().redo()}
+                                                    className="px-3 py-1.5 rounded text-sm font-medium transition-colors bg-white/20 text-white hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    title="Redo"
+                                                >
+                                                    ↷
+                                                </button>
+                                            </div>
+                                            {/* Editor Content */}
+                                            <div className="p-4 min-h-[300px] bg-white/10">
+                                                <EditorContent editor={editor} />
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <textarea
+                                            name="content"
+                                            rows="8"
+                                            required
+                                            value={formData.content}
+                                            onChange={handleChange}
+                                            placeholder="Loading editor... Write your full blog content here..."
+                                            className="w-full p-4 rounded-xl bg-white/20 border border-white/30 text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-all resize-none"
+                                            style={{ minHeight: '300px' }}
+                                        />
+                                    )}
+                                    <style jsx global>{`
+                                        .ProseMirror {
+                                            outline: none;
+                                            min-height: 300px;
+                                            color: white;
+                                        }
+                                        .ProseMirror p {
+                                            margin-bottom: 1rem;
+                                            line-height: 1.6;
+                                        }
+                                        .ProseMirror h2 {
+                                            font-size: 1.5rem;
+                                            font-weight: 700;
+                                            margin-top: 1.5rem;
+                                            margin-bottom: 1rem;
+                                            color: white;
+                                        }
+                                        .ProseMirror h3 {
+                                            font-size: 1.25rem;
+                                            font-weight: 600;
+                                            margin-top: 1.25rem;
+                                            margin-bottom: 0.75rem;
+                                            color: white;
+                                        }
+                                        .ProseMirror ul, .ProseMirror ol {
+                                            margin-left: 1.5rem;
+                                            margin-bottom: 1rem;
+                                        }
+                                        .ProseMirror ul {
+                                            list-style-type: disc;
+                                        }
+                                        .ProseMirror ol {
+                                            list-style-type: decimal;
+                                        }
+                                        .ProseMirror blockquote {
+                                            border-left: 4px solid rgba(255, 255, 255, 0.3);
+                                            padding-left: 1rem;
+                                            margin: 1rem 0;
+                                            font-style: italic;
+                                            color: rgba(255, 255, 255, 0.9);
+                                        }
+                                        .ProseMirror img {
+                                            max-width: 100%;
+                                            height: auto;
+                                            margin: 1rem 0;
+                                            border-radius: 0.5rem;
+                                            border: 2px solid rgba(255, 255, 255, 0.2);
+                                        }
+                                        .ProseMirror a {
+                                            color: #60a5fa;
+                                            text-decoration: underline;
+                                        }
+                                        .ProseMirror a:hover {
+                                            color: #93c5fd;
+                                        }
+                                        .ProseMirror code {
+                                            background: rgba(0, 0, 0, 0.3);
+                                            padding: 0.2rem 0.4rem;
+                                            border-radius: 0.25rem;
+                                            font-family: monospace;
+                                            color: #fbbf24;
+                                        }
+                                        .ProseMirror pre {
+                                            background: rgba(0, 0, 0, 0.5);
+                                            padding: 1rem;
+                                            border-radius: 0.5rem;
+                                            overflow-x: auto;
+                                            margin: 1rem 0;
+                                        }
+                                        .ProseMirror pre code {
+                                            background: transparent;
+                                            padding: 0;
+                                            color: white;
+                                        }
+                                        .ProseMirror p.is-editor-empty:first-child::before {
+                                            content: attr(data-placeholder);
+                                            float: left;
+                                            color: rgba(255, 255, 255, 0.7);
+                                            pointer-events: none;
+                                            height: 0;
+                                        }
+                                        .ProseMirror [style*="text-align: left"] {
+                                            text-align: left;
+                                        }
+                                        .ProseMirror [style*="text-align: center"] {
+                                            text-align: center;
+                                        }
+                                        .ProseMirror [style*="text-align: right"] {
+                                            text-align: right;
+                                        }
+                                    `}</style>
+                                    <div className="flex items-center justify-between mt-2">
+                                        <p className="text-sm text-gray-300">
+                                            💡 Use the toolbar above to format your content with headings (H2, H3), paragraphs, lists, bold, italic, and more. Or share a Google Drive document with <span className="text-yellow-300 font-mono">mvivekraz@gmail.com</span> and mention it in the editor.
+                                        </p>
+                                    </div>
+                                    <div className="mt-2 flex items-center justify-between">
+                                        <p className="text-xs text-gray-400">
+                                            📦 Total size includes content + image
+                                        </p>
+                                        {(() => {
+                                            const maxSize = 2 * 1024 * 1024; // 2MB
+                                            const currentSize = calculateContentSize();
+                                            const remainingSize = maxSize - currentSize;
+                                            const remainingMB = (remainingSize / (1024 * 1024)).toFixed(2);
+                                            const currentMB = (currentSize / (1024 * 1024)).toFixed(2);
+
+                                            return (
+                                                <div className="text-right">
+                                                    <span className={`text-xs font-medium ${currentSize > maxSize
+                                                        ? 'text-red-400'
+                                                        : currentSize > 1.5 * 1024 * 1024
+                                                            ? 'text-yellow-400'
+                                                            : 'text-green-400'
+                                                        }`}>
+                                                        {currentSize > maxSize ? (
+                                                            <span>⚠️ Exceeded by {Math.abs(remainingMB)} MB</span>
+                                                        ) : (
+                                                            <span>✅ {remainingMB} MB remaining ({currentMB} MB used)</span>
+                                                        )}
+                                                    </span>
+                                                </div>
+                                            );
+                                        })()}
+                                    </div>
                                 </div>
                             </div>
                         </div>

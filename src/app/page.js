@@ -18,7 +18,7 @@ export default function Home() {
     "@type": "Organization",
     "name": "TechyBlog",
     "url": fullDomain,
-    "logo": `${fullDomain}/favicon.ico`,
+    "logo": `${fullDomain}/favicon.png`,
     "description": "Join our community of passionate writers and start sharing your knowledge with the world.",
     "sameAs": []
   };

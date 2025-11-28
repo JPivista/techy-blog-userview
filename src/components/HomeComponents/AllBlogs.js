@@ -195,53 +195,71 @@ const AllBlogs = () => {
 
             {/* Blog Grid */}
             <div className="grid md:grid-cols-3 sm:grid-cols-2 grid-cols-1 gap-6">
-                {displayedBlogs.map((blog) => (
-                    <div
-                        key={blog._id}
-                        className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition flex flex-col h-full"
-                    >
-                        {getBlogImageUrl(blog) ? (
-                            <div className="relative w-full h-48">
-                                <Image
-                                    src={getBlogImageUrl(blog)}
-                                    alt={blog.title}
-                                    fill
-                                    className="object-cover"
-                                    unoptimized
-                                />
-                            </div>
-                        ) : (
-                            <div className="w-full h-48 flex items-center justify-center text-3xl font-bold text-white bg-gradient-to-r from-purple-600 via-pink-500 to-yellow-400 shadow-lg">
-                                {blog.categoryIds?.[0]?.name || 'TechyBlog'}
-                            </div>
-                        )}
+                {displayedBlogs.map((blog) => {
+                    // Strip HTML tags and get plain text for description
+                    const stripHtml = (html) => {
+                        if (!html) return '';
+                        // Remove HTML tags
+                        let text = html.replace(/<[^>]*>/g, '');
+                        // Decode common HTML entities
+                        text = text.replace(/&nbsp;/g, ' ')
+                                   .replace(/&amp;/g, '&')
+                                   .replace(/&lt;/g, '<')
+                                   .replace(/&gt;/g, '>')
+                                   .replace(/&quot;/g, '"')
+                                   .replace(/&#39;/g, "'")
+                                   .replace(/&[^;]+;/g, ' ');
+                        return text.trim();
+                    };
+                    const plainDescription = stripHtml(blog.description);
+                    
+                    return (
+                        <Link
+                            key={blog._id}
+                            href={`/${blog.categoryIds?.[0]?.slug || 'blog'}/${blog.slug}`}
+                            className="block h-full"
+                        >
+                            <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg hover:scale-105 transition-all duration-300 flex flex-col h-full cursor-pointer group">
+                                {getBlogImageUrl(blog) ? (
+                                    <div className="relative w-full h-48 overflow-hidden">
+                                        <Image
+                                            src={getBlogImageUrl(blog)}
+                                            alt={blog.title}
+                                            fill
+                                            className="object-cover group-hover:scale-110 transition-transform duration-300"
+                                            unoptimized
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="w-full h-48 flex items-center justify-center text-3xl font-bold text-white bg-gradient-to-r from-purple-600 via-pink-500 to-yellow-400 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                                        {blog.categoryIds?.[0]?.name || 'TechyBlog'}
+                                    </div>
+                                )}
 
-                        <div className="p-4 flex flex-col flex-grow">
-                            <h3 className="text-lg font-semibold text-blue-700 mb-2 line-clamp-2 min-h-[3.5rem]">
-                                {blog.title}
-                            </h3>
-                            <div
-                                className="text-gray-600 text-sm mb-4 line-clamp-3 min-h-[4.5rem]"
-                                dangerouslySetInnerHTML={{ __html: blog.description }}
-                            />
+                                <div className="p-4 flex flex-col flex-grow">
+                                    <h3 className="text-lg font-semibold text-blue-700 mb-2 line-clamp-2 min-h-[3.5rem] group-hover:text-purple-600 transition-colors">
+                                        {blog.title}
+                                    </h3>
+                                    <p className="text-gray-600 text-sm mb-4 line-clamp-3 overflow-hidden text-ellipsis">
+                                        {plainDescription || 'No description available...'}
+                                    </p>
 
-                            <div className="mt-auto">
-                                <div className="text-xs text-gray-400 mb-2 flex justify-between">
-                                    <span>
-                                        {blog.publishedDate ? new Date(blog.publishedDate).toLocaleDateString() : 'No Date'}
-                                    </span>
-                                    <span>By: {blog?.authorName || 'Unknown'}</span>
+                                    <div className="mt-auto">
+                                        <div className="text-xs text-gray-400 mb-2 flex justify-between">
+                                            <span>
+                                                {blog.publishedDate ? new Date(blog.publishedDate).toLocaleDateString() : 'No Date'}
+                                            </span>
+                                            <span>By: {blog?.authorName || 'Unknown'}</span>
+                                        </div>
+                                        <span className="text-sm font-semibold text-purple-600 group-hover:text-purple-800 transition">
+                                            Read More →
+                                        </span>
+                                    </div>
                                 </div>
-                                <Link
-                                    href={`/${blog.categoryIds?.[0]?.slug || 'blog'}/${blog.slug}`}
-                                    className="text-sm font-semibold text-purple-600 hover:text-purple-800 transition"
-                                >
-                                    Read More →
-                                </Link>
                             </div>
-                        </div>
-                    </div>
-                ))}
+                        </Link>
+                    );
+                })}
             </div>
 
             {/* Load More Button */}

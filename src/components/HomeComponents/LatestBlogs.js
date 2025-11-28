@@ -48,15 +48,15 @@ const LatestBlogs = () => {
                 const transformedBlogs = await Promise.all(wpPosts.map(async (wpPost) => {
                     const featuredImage = wpPost._embedded?.['wp:featuredmedia']?.[0]?.source_url || null;
                     const wpCategories = wpPost._embedded?.['wp:term']?.[0] || [];
-                    
+
                     // Fetch tags to get tag names
                     const wpTagNames = await fetchWordPressTags(wpPost.tags || []);
-                    
+
                     // Fetch post_author_name from ACF or meta fields, fallback to embedded author
-                    const postAuthorName = wpPost.acf?.post_author_name || 
-                                         wpPost.meta?.post_author_name || 
-                                         wpPost._embedded?.author?.[0]?.name || 
-                                         'Unknown Author';
+                    const postAuthorName = wpPost.acf?.post_author_name ||
+                        wpPost.meta?.post_author_name ||
+                        wpPost._embedded?.author?.[0]?.name ||
+                        'Unknown Author';
 
                     return {
                         _id: wpPost.id.toString(),
@@ -140,56 +140,76 @@ const LatestBlogs = () => {
                         }}
                         modules={[Navigation, Autoplay]}
                     >
-                        {blogs.map((blog) => (
-                            <SwiperSlide key={blog._id} className="p-3">
-                                <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl hover:scale-105 transition-all duration-300 ease-in-out h-full flex flex-col group">
-                                    {/* Image or fallback */}
-                                    {getBlogImageUrl(blog) ? (
-                                        <div className="overflow-hidden relative w-full h-48">
-                                            <Image
-                                                src={getBlogImageUrl(blog)}
-                                                alt={blog.title}
-                                                fill
-                                                className="object-cover group-hover:scale-110 transition-transform duration-300 ease-in-out"
-                                                unoptimized
-                                            />
-                                        </div>
-                                    ) : (
-                                        <div className="w-full h-48 flex items-center justify-center text-3xl font-bold text-white bg-gradient-to-r from-purple-600 via-pink-500 to-yellow-400 shadow-lg group-hover:scale-110 transition-transform duration-300 ease-in-out">
-                                            <span className="drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]">
-                                                {blog.categoryIds?.[0]?.name || 'TechyBlog'}
-                                            </span>
-                                        </div>
-                                    )}
+                        {blogs.map((blog) => {
+                            // Strip HTML tags and get plain text for description
+                            const stripHtml = (html) => {
+                                if (!html) return '';
+                                // Remove HTML tags
+                                let text = html.replace(/<[^>]*>/g, '');
+                                // Decode common HTML entities
+                                text = text.replace(/&nbsp;/g, ' ')
+                                    .replace(/&amp;/g, '&')
+                                    .replace(/&lt;/g, '<')
+                                    .replace(/&gt;/g, '>')
+                                    .replace(/&quot;/g, '"')
+                                    .replace(/&#39;/g, "'")
+                                    .replace(/&[^;]+;/g, ' ');
+                                return text.trim();
+                            };
+                            const plainDescription = stripHtml(blog.description);
 
-                                    {/* Content */}
-                                    <div className="p-4 flex flex-col flex-grow">
-                                        <h3 className="text-lg font-semibold text-blue-700 mb-2 line-clamp-2 min-h-[3.5rem] group-hover:text-purple-600 transition-colors duration-300">
-                                            {blog.title}
-                                        </h3>
-                                        <div
-                                            className="text-gray-600 text-sm mb-4 line-clamp-3 min-h-[4.5rem]"
-                                            dangerouslySetInnerHTML={{ __html: blog.description }}
-                                        />
+                            return (
+                                <SwiperSlide key={blog._id} className="p-3">
+                                    <Link
+                                        href={`/${blog.categoryIds?.[0]?.slug || 'blog'}/${blog.slug}`}
+                                        className="block h-full"
+                                    >
+                                        <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl hover:scale-105 transition-all duration-300 ease-in-out h-full flex flex-col group cursor-pointer">
+                                            {/* Image or fallback */}
+                                            {getBlogImageUrl(blog) ? (
+                                                <div className="overflow-hidden relative w-full h-48">
+                                                    <Image
+                                                        src={getBlogImageUrl(blog)}
+                                                        alt={blog.title}
+                                                        fill
+                                                        className="object-cover group-hover:scale-110 transition-transform duration-300 ease-in-out"
+                                                        unoptimized
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <div className="w-full h-48 flex items-center justify-center text-3xl font-bold text-white bg-gradient-to-r from-purple-600 via-pink-500 to-yellow-400 shadow-lg group-hover:scale-110 transition-transform duration-300 ease-in-out">
+                                                    <span className="drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]">
+                                                        {blog.categoryIds?.[0]?.name || 'TechyBlog'}
+                                                    </span>
+                                                </div>
+                                            )}
 
-                                        <div className="mt-auto">
-                                            <div className="text-sm text-gray-400 mb-2 flex justify-between">
-                                                <span>{blog?.publishedDate ? new Date(blog.publishedDate).toLocaleDateString() : 'No Date'}</span>
-                                                <span className="text-purple-600 font-medium">
-                                                    By: {blog?.authorName || 'Unknown'}
-                                                </span>
+                                            {/* Content */}
+                                            <div className="p-4 flex flex-col flex-grow">
+                                                <h3 className="text-lg font-semibold text-blue-700 mb-2 line-clamp-2 min-h-[3.5rem] group-hover:text-purple-600 transition-colors duration-300">
+                                                    {blog.title}
+                                                </h3>
+                                                <p className="text-gray-600 text-sm mb-4 line-clamp-3 overflow-hidden text-ellipsis">
+                                                    {plainDescription || 'No description available...'}
+                                                </p>
+
+                                                <div className="mt-auto">
+                                                    <div className="text-sm text-gray-400 mb-2 flex justify-between">
+                                                        <span>{blog?.publishedDate ? new Date(blog.publishedDate).toLocaleDateString() : 'No Date'}</span>
+                                                        <span className="text-purple-600 font-medium">
+                                                            By: {blog?.authorName || 'Unknown'}
+                                                        </span>
+                                                    </div>
+                                                    <span className="text-sm font-semibold text-purple-600 group-hover:text-purple-800 group-hover:scale-105 transition-all duration-300 inline-block">
+                                                        Read More →
+                                                    </span>
+                                                </div>
                                             </div>
-                                            <Link
-                                                href={`/${blog.categoryIds?.[0]?.slug || 'blog'}/${blog.slug}`}
-                                                className="text-sm font-semibold text-purple-600 hover:text-purple-800 group-hover:scale-105 transition-all duration-300 inline-block"
-                                            >
-                                                Read More →
-                                            </Link>
                                         </div>
-                                    </div>
-                                </div>
-                            </SwiperSlide>
-                        ))}
+                                    </Link>
+                                </SwiperSlide>
+                            );
+                        })}
                     </Swiper>
 
                     {/* Custom Navigation Arrows */}

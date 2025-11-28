@@ -10,7 +10,13 @@ const Header = () => {
     const [showCategoriesPopup, setShowCategoriesPopup] = useState(false);
     const [categories, setCategories] = useState([]);
     const [categoriesLoading, setCategoriesLoading] = useState(true);
+    const [isMounted, setIsMounted] = useState(false);
     const pathname = usePathname();
+
+    // Ensure component is mounted on client to avoid hydration mismatch
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
 
     // Fetch categories from WordPress API
     useEffect(() => {
@@ -73,7 +79,7 @@ const Header = () => {
 
                 {/* Desktop Navigation */}
                 <nav className="hidden md:flex flex-wrap gap-4 text-sm font-medium items-center">
-                    {categoriesLoading ? (
+                    {!isMounted || categoriesLoading ? (
                         <div className="text-gray-500">Loading categories...</div>
                     ) : (
                         <>

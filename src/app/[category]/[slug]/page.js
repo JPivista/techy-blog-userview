@@ -289,7 +289,7 @@ export default async function BlogDetailsPage({ params }) {
 
     const fullDomain = process.env.NEXT_PUBLIC_FULL_DOMAIN || 'https://techy-blog.com';
     const blogUrl = `${fullDomain}/${category}/${slug}`;
-    
+
     // Create Article schema
     const articleSchema = {
         "@context": "https://schema.org",
@@ -309,7 +309,7 @@ export default async function BlogDetailsPage({ params }) {
             "url": fullDomain,
             "logo": {
                 "@type": "ImageObject",
-                "url": `${fullDomain}/favicon.ico`
+                "url": `${fullDomain}/favicon.png`
             }
         },
         "mainEntityOfPage": {
@@ -321,143 +321,187 @@ export default async function BlogDetailsPage({ params }) {
     };
 
     return (
-        <div className="max-w-6xl mx-auto py-10 px-4 grid grid-cols-1 md:grid-cols-3 gap-10">
-            <Script
-                id="article-schema"
-                type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
-            />
-            {/* Blog Content */}
-            <div className="md:col-span-2">
-                {/* Breadcrumbs */}
-                <nav className="text-sm text-gray-500 mb-6">
-                    <ol className="list-reset flex space-x-2 items-center">
-                        <li>
-                            <Link href="/" className="hover:underline text-purple-600">Home</Link>
-                        </li>
-                        <li>/</li>
-                        <li>
-                            <Link href={`/${blog.categoryIds?.[0]?.slug || category}`} className="hover:underline text-purple-600 capitalize">
-                                {blog.categoryIds?.[0]?.name || category.replace(/-/g, ' ')}
-                            </Link>
-                        </li>
-                        <li>/</li>
-                        <li className="text-gray-700 capitalize line-clamp-1">{blog.title}</li>
-                    </ol>
-                </nav>
+        <>
+            {
+                <style dangerouslySetInnerHTML={{
+                    __html: `
+                    p{
+                        margin-bottom: 10px;
+                        line-height: 1.5;
+                    }
+                    h1{
+                        font-size: 2rem;
+                        font-weight: 700;
+                        margin-bottom: 1rem;
+                        margin-top: 2rem;
+                    }
+                    h2{
+                        font-size: 1.5rem;
+                        margin-bottom: 1rem;
+                        margin-top: 2rem;
+                    }
+                    ol, ul{
+                        margin-left: 1.5rem;
+                        margin-bottom: 1rem;
+                        padding-left: 1rem;
+                    }
+                    ol{
+                        list-style-type: decimal;
+                    }
+                    ul{
+                        list-style-type: disc;
+                    }
+                    li{
+                        margin-bottom: 10px;
+                        line-height: 1.5;
+                        display: list-item;
+                        list-style-position: outside;
+                        padding-left: 0.5rem;
+                    }
+                    ol li, ul li{
+                        margin-left: 0;
+                    }
+                `}} />
+            }
 
-                {/* Blog Banner Image */}
-                {getBlogBannerUrl(blog) && (
-                    <div className="mb-6 relative w-full h-64 md:h-96">
-                        <Image
-                            src={getBlogBannerUrl(blog)}
-                            alt={blog.title}
-                            fill
-                            className="object-cover rounded-lg shadow-lg"
-                            unoptimized
-                        />
-                    </div>
-                )}
+            <div className="max-w-6xl mx-auto py-10 px-4 grid grid-cols-1 md:grid-cols-3 gap-10">
+                <Script
+                    id="article-schema"
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
+                />
+                {/* Blog Content */}
+                <div className="md:col-span-2">
+                    {/* Breadcrumbs */}
+                    <nav className="text-sm text-gray-500 mb-6">
+                        <ol className="list-reset flex space-x-2 items-center">
+                            <li>
+                                <Link href="/" className="hover:underline text-purple-600">Home</Link>
+                            </li>
+                            <li>/</li>
+                            <li>
+                                <Link href={`/${blog.categoryIds?.[0]?.slug || category}`} className="hover:underline text-purple-600 capitalize">
+                                    {blog.categoryIds?.[0]?.name || category.replace(/-/g, ' ')}
+                                </Link>
+                            </li>
+                            <li>/</li>
+                            <li className="text-gray-700 capitalize line-clamp-1">{blog.title}</li>
+                        </ol>
+                    </nav>
 
-                <h1 className="text-4xl font-bold mb-4 text-purple-700">{blog.title}</h1>
-
-                {/* Author and Date Information */}
-                <div className="flex items-center justify-between mb-6 p-4 bg-gray-50 rounded-lg">
-                    <div className="flex items-center space-x-4">
-                        <div className="flex flex-col">
-                            <span className="text-sm text-gray-500">Author</span>
-                            <span className="font-semibold text-purple-600">
-                                {blog?.authorName || 'Unknown Author'}
-                            </span>
-                        </div>
-                        <div className="flex flex-col">
-                            <span className="text-sm text-gray-500">Published</span>
-                            <span className="font-medium text-gray-700">
-                                {blog?.publishedDate ? new Date(blog.publishedDate).toLocaleDateString('en-US', {
-                                    year: 'numeric',
-                                    month: 'long',
-                                    day: 'numeric'
-                                }) : 'No Date'}
-                            </span>
-                        </div>
-                    </div>
-                    {blog?.categoryIds?.[0]?.name && (
-                        <div className="flex flex-col items-end">
-                            <span className="text-sm text-gray-500">Category</span>
-                            <span className="font-medium text-purple-600 capitalize">
-                                {blog.categoryIds[0].name}
-                            </span>
+                    {/* Blog Banner Image */}
+                    {getBlogBannerUrl(blog) && (
+                        <div className="mb-6 relative w-full h-64 md:h-96">
+                            <Image
+                                src={getBlogBannerUrl(blog)}
+                                alt={blog.title}
+                                fill
+                                className="object-cover rounded-lg shadow-lg"
+                                unoptimized
+                            />
                         </div>
                     )}
-                </div>
 
-                {/* Tags */}
-                {blog.tags && blog.tags.length > 0 && (
-                    <div className="mb-6">
-                        <div className="flex flex-wrap gap-2">
-                            {blog.tags.map((tag, index) => (
-                                <span
-                                    key={index}
-                                    className="px-3 py-1 bg-purple-100 text-purple-700 text-sm rounded-full"
-                                >
-                                    #{tag}
+                    <h1 className="text-4xl font-bold mb-4 text-purple-700">{blog.title}</h1>
+
+                    {/* Author and Date Information */}
+                    <div className="flex items-center justify-between mb-6 p-4 bg-gray-50 rounded-lg">
+                        <div className="flex items-center space-x-4">
+                            <div className="flex flex-col">
+                                <span className="text-sm text-gray-500">Author</span>
+                                <span className="font-semibold text-purple-600">
+                                    {blog?.authorName || 'Unknown Author'}
                                 </span>
-                            ))}
-                        </div>
-                    </div>
-                )}
-
-                <div
-                    className="text-gray-700 leading-7 prose max-w-none"
-                    dangerouslySetInnerHTML={{ __html: blog.description }}
-                />
-            </div>
-
-            {/* Related Blogs */}
-            <aside className="space-y-6">
-                <h3 className="text-xl font-semibold text-purple-600 border-b pb-2 mb-4">Related Blogs</h3>
-                {relatedBlogs.length === 0 ? (
-                    <p className="text-sm text-gray-400">No related blogs found.</p>
-                ) : (
-                    relatedBlogs.map((related) => (
-                        <div
-                            key={related._id}
-                            className="bg-white rounded-md shadow-sm hover:shadow-md transition"
-                        >
-                            {getBlogImageUrl(related) ? (
-                                <div className="relative w-full h-32">
-                                    <Image
-                                        src={getBlogImageUrl(related)}
-                                        alt={related.title}
-                                        fill
-                                        className="object-cover rounded-t-md"
-                                        unoptimized
-                                    />
-                                </div>
-                            ) : (
-                                <div className="w-full h-32 flex items-center justify-center text-lg font-bold text-white bg-gradient-to-r from-purple-600 via-pink-500 to-yellow-400">
-                                    {related.categoryIds?.[0]?.name || 'TechyBlog'}
-                                </div>
-                            )}
-                            <div className="p-3">
-                                <h4 className="font-semibold text-base line-clamp-2">
-                                    {related.title}
-                                </h4>
-                                <p
-                                    className="text-sm text-gray-600 mt-2 line-clamp-3"
-                                    dangerouslySetInnerHTML={{ __html: related.description }}
-                                />
-                                <Link
-                                    href={`/${related.categoryIds?.[0]?.slug || category}/${related.slug}`}
-                                    className="text-xs text-purple-600 mt-2 inline-block hover:underline"
-                                >
-                                    Read More →
-                                </Link>
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-sm text-gray-500">Published</span>
+                                <span className="font-medium text-gray-700">
+                                    {blog?.publishedDate ? new Date(blog.publishedDate).toLocaleDateString('en-US', {
+                                        year: 'numeric',
+                                        month: 'long',
+                                        day: 'numeric'
+                                    }) : 'No Date'}
+                                </span>
                             </div>
                         </div>
-                    ))
-                )}
-            </aside>
-        </div>
+                        {blog?.categoryIds?.[0]?.name && (
+                            <div className="flex flex-col items-end">
+                                <span className="text-sm text-gray-500">Category</span>
+                                <span className="font-medium text-purple-600 capitalize">
+                                    {blog.categoryIds[0].name}
+                                </span>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Tags */}
+                    {blog.tags && blog.tags.length > 0 && (
+                        <div className="mb-6">
+                            <div className="flex flex-wrap gap-2">
+                                {blog.tags.map((tag, index) => (
+                                    <span
+                                        key={index}
+                                        className="px-3 py-1 bg-purple-100 text-purple-700 text-sm rounded-full"
+                                    >
+                                        #{tag}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    <div
+                        className="text-gray-700 leading-7 prose max-w-none"
+                        dangerouslySetInnerHTML={{ __html: blog.description }}
+                    />
+                </div>
+
+                {/* Related Blogs */}
+                <aside className="space-y-6">
+                    <h3 className="text-xl font-semibold text-purple-600 border-b pb-2 mb-4">Related Blogs</h3>
+                    {relatedBlogs.length === 0 ? (
+                        <p className="text-sm text-gray-400">No related blogs found.</p>
+                    ) : (
+                        relatedBlogs.map((related) => (
+                            <div
+                                key={related._id}
+                                className="bg-white rounded-md shadow-sm hover:shadow-md transition"
+                            >
+                                {getBlogImageUrl(related) ? (
+                                    <div className="relative w-full h-32">
+                                        <Image
+                                            src={getBlogImageUrl(related)}
+                                            alt={related.title}
+                                            fill
+                                            className="object-cover rounded-t-md"
+                                            unoptimized
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="w-full h-32 flex items-center justify-center text-lg font-bold text-white bg-gradient-to-r from-purple-600 via-pink-500 to-yellow-400">
+                                        {related.categoryIds?.[0]?.name || 'TechyBlog'}
+                                    </div>
+                                )}
+                                <div className="p-3">
+                                    <h4 className="font-semibold text-base line-clamp-2">
+                                        {related.title}
+                                    </h4>
+                                    <p
+                                        className="text-sm text-gray-600 mt-2 line-clamp-3"
+                                        dangerouslySetInnerHTML={{ __html: related.description }}
+                                    />
+                                    <Link
+                                        href={`/${related.categoryIds?.[0]?.slug || category}/${related.slug}`}
+                                        className="text-xs text-purple-600 mt-2 inline-block hover:underline"
+                                    >
+                                        Read More →
+                                    </Link>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </aside>
+            </div>
+        </>
     );
 }
