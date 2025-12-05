@@ -141,23 +141,6 @@ const LatestBlogs = () => {
                         modules={[Navigation, Autoplay]}
                     >
                         {blogs.map((blog) => {
-                            // Strip HTML tags and get plain text for description
-                            const stripHtml = (html) => {
-                                if (!html) return '';
-                                // Remove HTML tags
-                                let text = html.replace(/<[^>]*>/g, '');
-                                // Decode common HTML entities
-                                text = text.replace(/&nbsp;/g, ' ')
-                                    .replace(/&amp;/g, '&')
-                                    .replace(/&lt;/g, '<')
-                                    .replace(/&gt;/g, '>')
-                                    .replace(/&quot;/g, '"')
-                                    .replace(/&#39;/g, "'")
-                                    .replace(/&[^;]+;/g, ' ');
-                                return text.trim();
-                            };
-                            const plainDescription = stripHtml(blog.description);
-
                             return (
                                 <SwiperSlide key={blog._id} className="p-3">
                                     <Link
@@ -186,12 +169,14 @@ const LatestBlogs = () => {
 
                                             {/* Content */}
                                             <div className="p-4 flex flex-col flex-grow">
-                                                <h3 className="text-lg font-semibold text-blue-700 mb-2 line-clamp-2 min-h-[3.5rem] group-hover:text-purple-600 transition-colors duration-300">
-                                                    {blog.title}
-                                                </h3>
-                                                <p className="text-gray-600 text-sm mb-4 line-clamp-3 overflow-hidden text-ellipsis">
-                                                    {plainDescription || 'No description available...'}
-                                                </p>
+                                                <h3 
+                                                    className="text-lg font-semibold text-blue-700 mb-2 line-clamp-2 min-h-[3.5rem] group-hover:text-purple-600 transition-colors duration-300"
+                                                    dangerouslySetInnerHTML={{ __html: blog.title }}
+                                                />
+                                                <div 
+                                                    className="text-gray-600 text-sm mb-4 line-clamp-3 overflow-hidden text-ellipsis"
+                                                    dangerouslySetInnerHTML={{ __html: blog.description || 'No description available...' }}
+                                                />
 
                                                 <div className="mt-auto">
                                                     <div className="text-sm text-gray-400 mb-2 flex justify-between">

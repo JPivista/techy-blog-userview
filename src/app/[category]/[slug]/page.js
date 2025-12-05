@@ -374,19 +374,22 @@ export default async function BlogDetailsPage({ params }) {
                 <div className="md:col-span-2">
                     {/* Breadcrumbs */}
                     <nav className="text-sm text-gray-500 mb-6">
-                        <ol className="list-reset flex space-x-2 items-center">
-                            <li>
+                        <div className="flex space-x-2 items-center">
+                            <span>
                                 <Link href="/" className="hover:underline text-purple-600">Home</Link>
-                            </li>
-                            <li>/</li>
-                            <li>
+                            </span>
+                            <span>/</span>
+                            <span>
                                 <Link href={`/${blog.categoryIds?.[0]?.slug || category}`} className="hover:underline text-purple-600 capitalize">
                                     {blog.categoryIds?.[0]?.name || category.replace(/-/g, ' ')}
                                 </Link>
-                            </li>
-                            <li>/</li>
-                            <li className="text-gray-700 capitalize line-clamp-1">{blog.title}</li>
-                        </ol>
+                            </span>
+                            <span>/</span>
+                            <span 
+                                className="text-gray-700 capitalize line-clamp-1"
+                                dangerouslySetInnerHTML={{ __html: blog.title }}
+                            />
+                        </div>
                     </nav>
 
                     {/* Blog Banner Image */}
@@ -394,7 +397,7 @@ export default async function BlogDetailsPage({ params }) {
                         <div className="mb-6 relative w-full h-64 md:h-96">
                             <Image
                                 src={getBlogBannerUrl(blog)}
-                                alt={blog.title}
+                                alt={blog.title?.replace(/<[^>]*>/g, '') || 'Blog banner'}
                                 fill
                                 className="object-cover rounded-lg shadow-lg"
                                 unoptimized
@@ -402,7 +405,10 @@ export default async function BlogDetailsPage({ params }) {
                         </div>
                     )}
 
-                    <h1 className="text-4xl font-bold mb-4 text-purple-700">{blog.title}</h1>
+                    <h1 
+                        className="text-4xl font-bold mb-4 text-purple-700"
+                        dangerouslySetInnerHTML={{ __html: blog.title }}
+                    />
 
                     {/* Author and Date Information */}
                     <div className="flex items-center justify-between mb-6 p-4 bg-gray-50 rounded-lg">

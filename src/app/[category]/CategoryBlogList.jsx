@@ -148,17 +148,17 @@ export default function CategoryBlogList({ categorySlug }) {
             <div className="max-w-6xl mx-auto px-4 py-10">
                 {/* Breadcrumbs */}
                 <nav className="text-sm text-gray-500 mb-4">
-                    <ul className="flex items-center gap-2">
-                        <li>
+                    <div className="flex items-center gap-2">
+                        <span>
                             <Link href="/" className="hover:underline text-purple-600">
                                 Home
                             </Link>
-                        </li>
-                        <li>/</li>
-                        <li className="text-gray-700 capitalize line-clamp-1">
+                        </span>
+                        <span>/</span>
+                        <span className="text-gray-700 capitalize line-clamp-1">
                             {categoryInfo?.name || categorySlug}
-                        </li>
-                    </ul>
+                        </span>
+                    </div>
                 </nav>
 
                 {/* Category Header */}
@@ -235,17 +235,17 @@ export default function CategoryBlogList({ categorySlug }) {
         <div className="max-w-6xl mx-auto px-4 py-10">
             {/* Breadcrumbs */}
             <nav className="text-sm text-gray-500 mb-4">
-                <ul className="flex items-center gap-2">
-                    <li>
+                <div className="flex items-center gap-2">
+                    <span>
                         <Link href="/" className="hover:underline text-purple-600">
                             Home
                         </Link>
-                    </li>
-                    <li>/</li>
-                    <li className="text-gray-700 capitalize line-clamp-1">
+                    </span>
+                    <span>/</span>
+                    <span className="text-gray-700 capitalize line-clamp-1">
                         {categoryInfo?.name || categorySlug}
-                    </li>
-                </ul>
+                    </span>
+                </div>
             </nav>
 
             {/* Category Header */}
@@ -264,23 +264,6 @@ export default function CategoryBlogList({ categorySlug }) {
             {/* Blog Grid */}
             <div className="grid md:grid-cols-3 sm:grid-cols-2 grid-cols-1 gap-6">
                 {displayedBlogs.map((blog) => {
-                    // Strip HTML tags and get plain text for description
-                    const stripHtml = (html) => {
-                        if (!html) return '';
-                        // Remove HTML tags
-                        let text = html.replace(/<[^>]*>/g, '');
-                        // Decode common HTML entities
-                        text = text.replace(/&nbsp;/g, ' ')
-                                   .replace(/&amp;/g, '&')
-                                   .replace(/&lt;/g, '<')
-                                   .replace(/&gt;/g, '>')
-                                   .replace(/&quot;/g, '"')
-                                   .replace(/&#39;/g, "'")
-                                   .replace(/&[^;]+;/g, ' ');
-                        return text.trim();
-                    };
-                    const plainDescription = stripHtml(blog.description);
-                    
                     return (
                         <Link
                             key={blog._id}
@@ -305,12 +288,14 @@ export default function CategoryBlogList({ categorySlug }) {
                                 )}
 
                                 <div className="p-4 flex flex-col flex-grow">
-                                    <h3 className="text-lg font-semibold text-blue-700 mb-2 line-clamp-2 min-h-[3.5rem] group-hover:text-purple-600 transition-colors">
-                                        {blog.title}
-                                    </h3>
-                                    <p className="text-gray-600 text-sm mb-4 line-clamp-3 overflow-hidden text-ellipsis">
-                                        {plainDescription || 'No description available...'}
-                                    </p>
+                                    <h3 
+                                        className="text-lg font-semibold text-blue-700 mb-2 line-clamp-2 min-h-[3.5rem] group-hover:text-purple-600 transition-colors"
+                                        dangerouslySetInnerHTML={{ __html: blog.title }}
+                                    />
+                                    <div 
+                                        className="text-gray-600 text-sm mb-4 line-clamp-3 overflow-hidden text-ellipsis"
+                                        dangerouslySetInnerHTML={{ __html: blog.description || 'No description available...' }}
+                                    />
 
                                     <div className="mt-auto">
                                         <div className="text-xs text-gray-400 mb-2 flex justify-between">
